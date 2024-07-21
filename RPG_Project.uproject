@@ -7,7 +7,11 @@
 		{
 			"Name": "RPG_Project",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine",
+				"UMG"
+			]
 		}
 	],
 	"Plugins": [
@@ -17,6 +21,18 @@
 			"TargetAllowList": [
 				"Editor"
 			]
+		},
+		{
+			"Name": "VisualStudioTools",
+			"Enabled": true,
+			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/362651520df94e4fa65492dbcba44ae2",
+			"SupportedTargetPlatforms": [
+				"Win64"
+			]
+		},
+		{
+			"Name": "Water",
+			"Enabled": true
 		}
 	]
 }
