@@ -45,6 +45,7 @@ public:
 	void Turn(float value);
 	void Jump();
 	void StopJump();
+	UFUNCTION()
 	void OnStaminaEnd();
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
@@ -58,6 +59,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	void StopSprint();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSetSprintSpeed(float NewSpeed);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastSetSprintSpeed(float NewSpeed);
 
 	UFUNCTION()
 	void UpdateHealthBar();

@@ -90,7 +90,10 @@ void UPlayerStatsComp::Death()
 	ChangeHealth(5.0f);
 }
 
-
+void UPlayerStatsComp::MulticastStopSprint_Implementation()
+{
+	StopSprint();
+}
 
 void UPlayerStatsComp::DecreaseStamina(float DeltaTime)
 {
@@ -101,6 +104,7 @@ void UPlayerStatsComp::DecreaseStamina(float DeltaTime)
 		if (CurrentStamina <= 0.0f)
 		{
 			OnStaminaEnd.Broadcast();
+			MulticastStopSprint();
 		}
 	}
 }

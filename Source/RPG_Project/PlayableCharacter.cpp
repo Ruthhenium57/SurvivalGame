@@ -147,16 +147,32 @@ void APlayableCharacter::Sprint()
 	if (PlayerStatsComp && PlayerStatsComp->CurrentStamina > 0)
 	{
 		bIsSprinting = true;
-		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 		PlayerStatsComp->StartSprint();
+		if (HasAuthority())
+		{
+			GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+			MulticastSetSprintSpeed(SprintSpeed);
+		}
+		else
+		{
+			ServerSetSprintSpeed(SprintSpeed);
+		}
 	}
 }
 
 void APlayableCharacter::StopSprint()
 {
 	bIsSprinting = false;
-	GetCharacterMovement()->MaxWalkSpeed = DefaultWalkSpeed;
 	PlayerStatsComp->StopSprint();
+	if (HasAuthority())
+	{
+		GetCharacterMovement()->MaxWalkSpeed = DefaultWalkSpeed;
+		MulticastSetSprintSpeed(DefaultWalkSpeed);
+	}
+	else
+	{
+		ServerSetSprintSpeed(DefaultWalkSpeed);
+	}
 }
 
 void APlayableCharacter::UpdateHealthBar()
@@ -182,4 +198,23 @@ void APlayableCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	//DOREPLIFETIME(AMyCharacter, Health); // Добавляем свойство Health для репликации
+}
+
+void APlayableCharacter::ServerSetSprintSpeed_Implementation(float NewSpeed)
+{
+	GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
+	MulticastSetSprintSpeed(NewSpeed);
+}
+
+bool APlayableCharacter::ServerSetSprintSpeed_Validate(float NewSpeed)
+{
+	return true;
+}
+
+void APlayableCharacter::MulticastSetSprintSpeed_Implementation(float NewSpeed)
+{
+	if (!HasAuthority())
+	{
+		GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
+	}
 }

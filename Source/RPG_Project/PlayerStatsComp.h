@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Net/UnrealNetwork.h"
 #include "PlayerStatsComp.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSprintEndDelegate);
@@ -59,6 +60,9 @@ public:
 	void TakeDamage(float AmountDamage);
 	
 	void Death();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastStopSprint();
 };
 
 
