@@ -78,6 +78,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
 	float StaminaDecreaseRate;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
+	float NeedStaminaToJump;
+
+	FTimerHandle StaminaRegenTimerHandle;
+	float StaminaRegenDelay;
+	void BeginStaminaRegen();
+
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UPlayerStatsComp* PlayerStatsComp;

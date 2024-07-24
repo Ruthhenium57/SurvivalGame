@@ -37,8 +37,10 @@ APlayableCharacter::APlayableCharacter()
 	DefaultWalkSpeed = 600.0f;
 	SprintSpeed = 1200.0f;
 	bIsSprinting = false;
-	StaminaRegenRate = 5.0f;
-	StaminaDecreaseRate = 10.0f;
+	StaminaRegenRate = 7.0f;
+	StaminaDecreaseRate = 12.0f;
+	StaminaRegenDelay = 1.5f;
+	NeedStaminaToJump = 12.0f;
 }
 
 void APlayableCharacter::BeginPlay()
@@ -115,12 +117,28 @@ void APlayableCharacter::Turn(float Value)
 
 void APlayableCharacter::Jump()
 {
-	bPressedJump = true;
+	if (PlayerStatsComp->CurrentStamina > NeedStaminaToJump)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(StaminaRegenTimerHandle);
+		GetWorld()->GetTimerManager().SetTimer(StaminaRegenTimerHandle, this, &APlayableCharacter::BeginStaminaRegen, StaminaRegenDelay, false);
+		PlayerStatsComp->bCanStaminaRegen = false;
+		bPressedJump = true;
+		if (HasAuthority())
+		{
+			PlayerStatsComp->OneTimeStaminaReduction(NeedStaminaToJump);
+			PlayerStatsComp->MulticastOneTimeStaminaReduction(NeedStaminaToJump);
+		}
+		else
+		{
+			PlayerStatsComp->ServerOneTimeStaminaReduction_Implementation(NeedStaminaToJump);
+		}
+	}
 }
 
 void APlayableCharacter::StopJump()
 {
 	bPressedJump = false;
+	PlayerStatsComp->bCanStaminaRegen = true;
 }
 
 void APlayableCharacter::OnStaminaEnd()
@@ -146,6 +164,7 @@ void APlayableCharacter::Sprint()
 {
 	if (PlayerStatsComp && PlayerStatsComp->CurrentStamina > 0)
 	{
+		GetWorld()->GetTimerManager().ClearTimer(StaminaRegenTimerHandle);
 		bIsSprinting = true;
 		PlayerStatsComp->StartSprint();
 		if (HasAuthority())
@@ -164,6 +183,7 @@ void APlayableCharacter::StopSprint()
 {
 	bIsSprinting = false;
 	PlayerStatsComp->StopSprint();
+	GetWorld()->GetTimerManager().SetTimer(StaminaRegenTimerHandle, this, &APlayableCharacter::BeginStaminaRegen, StaminaRegenDelay, false);
 	if (HasAuthority())
 	{
 		GetCharacterMovement()->MaxWalkSpeed = DefaultWalkSpeed;
@@ -191,6 +211,11 @@ void APlayableCharacter::UpdateStaminaBar()
 		float StaminaPercentage = PlayerStatsComp->CurrentStamina / PlayerStatsComp->MaxStamina;
 		MainHUDWidget->StaminaBarWidget->SetStamina(StaminaPercentage);
 	}
+}
+
+void APlayableCharacter::BeginStaminaRegen()
+{
+	PlayerStatsComp->bCanStaminaRegen = true;
 }
 
 void APlayableCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

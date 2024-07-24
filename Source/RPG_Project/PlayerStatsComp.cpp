@@ -16,6 +16,7 @@ UPlayerStatsComp::UPlayerStatsComp()
 	StaminaRegenRate = 5.0f;  
 	StaminaDecreaseRate = 10.0f;  
 	bIsSprinting = false;
+	bCanStaminaRegen = true;
 
 	MaxHealth = 100.0f;
 	CurrentHealth = 50.0f;
@@ -39,7 +40,10 @@ void UPlayerStatsComp::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	}
 	else
 	{
-		RegenerateStamina(DeltaTime);
+		if (bCanStaminaRegen)
+		{
+			RegenerateStamina(DeltaTime);
+		}
 	}
 }
 
@@ -53,6 +57,11 @@ void UPlayerStatsComp::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UPlayerStatsComp, CurrentHealth);
 	DOREPLIFETIME(UPlayerStatsComp, MaxArmor);
 	DOREPLIFETIME(UPlayerStatsComp, CurrentArmor);
+}
+
+void UPlayerStatsComp::OneTimeStaminaReduction(float AmountStamina)
+{
+	CurrentStamina = FMath::Clamp(CurrentStamina - AmountStamina, 0.0, MaxStamina);
 }
 
 void UPlayerStatsComp::ChangeHealth(float Amount)
@@ -73,6 +82,7 @@ void UPlayerStatsComp::ChangeHealth(float Amount)
 void UPlayerStatsComp::StartSprint()
 {
 	bIsSprinting = true;
+	bCanStaminaRegen = false;
 }
 
 void UPlayerStatsComp::StopSprint()
@@ -90,9 +100,31 @@ void UPlayerStatsComp::Death()
 	ChangeHealth(5.0f);
 }
 
+void UPlayerStatsComp::ServerOneTimeStaminaReduction_Implementation(float AmountStamina)
+{
+	OneTimeStaminaReduction(AmountStamina);
+	MulticastOneTimeStaminaReduction(AmountStamina);
+}
+
+bool UPlayerStatsComp::ServerOneTimeStaminaReduction_Validate(float AmountStamina)
+{
+	return true;
+}
+
+void UPlayerStatsComp::MulticastOneTimeStaminaReduction_Implementation(float AmountStamina)
+{
+	if (GetOwnerRole() == ROLE_Authority)
+	{
+		OneTimeStaminaReduction(AmountStamina);
+	}
+}
+
 void UPlayerStatsComp::MulticastStopSprint_Implementation()
 {
-	StopSprint();
+	if (GetOwnerRole() != ROLE_Authority)
+	{
+		StopSprint();
+	}
 }
 
 void UPlayerStatsComp::DecreaseStamina(float DeltaTime)

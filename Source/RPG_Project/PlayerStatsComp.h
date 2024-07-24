@@ -44,6 +44,8 @@ public:
 	float StaminaDecreaseRate;
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnSprintEndDelegate OnStaminaEnd;
+	bool bCanStaminaRegen;
+	void OneTimeStaminaReduction(float AmountStamina);
 
 	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadOnly, Category = "Health")
 	float MaxHealth;
@@ -63,6 +65,12 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastStopSprint();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerOneTimeStaminaReduction(float AmountStamina);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastOneTimeStaminaReduction(float AmountStamina);
 };
 
 
