@@ -20,4 +20,10 @@ public:
 
     UPROPERTY(meta = (BindWidget))
     class UStaminaBarWidget* StaminaBarWidget;
+
+    UPROPERTY(meta = (BindWidget))
+    class UThirstBarWidget* ThirstBarWidget;
+
+    UPROPERTY(meta = (BindWidget))
+    class UHungerBarWidget* HungerBarWidget;
 };

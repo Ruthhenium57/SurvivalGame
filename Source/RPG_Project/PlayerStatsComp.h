@@ -42,6 +42,8 @@ public:
 	float StaminaRegenRate;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina", meta = (AllowPrivateAccess = "true"))
 	float StaminaDecreaseRate;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina", meta = (AllowPrivateAccess = "true"))
+	float StaminaRegenRateWhenHungerOrThirstIs0;
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnSprintEndDelegate OnStaminaEnd;
 	bool bCanStaminaRegen;
@@ -52,12 +54,32 @@ public:
 	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadOnly, Category = "Health")
 	float CurrentHealth;
 
+	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadOnly, Category = "Thirst")
+	float CurrentThirst;
+	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadOnly, Category = "Thirst")
+	float MaxThirst;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Thirst")
+	float ThirstDecreaseRate;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Thirst")
+	float HealthDecreaseRateWhenThirstIs0;
+
+	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadOnly, Category = "Hunger")
+	float CurrentHunger;
+	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadOnly, Category = "Hunger")
+	float MaxHunger;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hunger")
+	float HungerDecreaseRate;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hunger")
+	float HealthDecreaseRateWhenHungerIs0;
+
 	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadOnly, Category = "Armor")
 	float MaxArmor;
 	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadOnly, Category = "Armor")
 	float CurrentArmor;
 
 	void ChangeHealth(float Amount);
+	void ChangeThirst(float Amount);
+	void ChangeHunger(float Amount);
 	
 	void TakeDamage(float AmountDamage);
 	
@@ -71,6 +93,12 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastOneTimeStaminaReduction(float AmountStamina);
+
+	void TickDecreaseThirst(float DeltaTime);
+
+	void TickDecreaseHunger(float DeltaTime);
+
+	void TickDecreaseHealth(float DeltaTime, float AmountHealth);
 };
 
 

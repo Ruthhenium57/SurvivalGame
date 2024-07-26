@@ -14,7 +14,8 @@ UPlayerStatsComp::UPlayerStatsComp()
 	MaxStamina = 100.0f;
 	CurrentStamina = MaxStamina;
 	StaminaRegenRate = 5.0f;  
-	StaminaDecreaseRate = 10.0f;  
+	StaminaDecreaseRate = 10.0f;
+	StaminaRegenRateWhenHungerOrThirstIs0 = StaminaRegenRate / 1.75f;
 	bIsSprinting = false;
 	bCanStaminaRegen = true;
 
@@ -23,6 +24,16 @@ UPlayerStatsComp::UPlayerStatsComp()
 
 	MaxArmor = 100.0f;
 	CurrentArmor = 0.0f;
+
+	MaxThirst = 100.0f;
+	CurrentThirst = MaxThirst;
+	ThirstDecreaseRate = 0.3f;
+	HealthDecreaseRateWhenThirstIs0 = 1.0f;
+
+	MaxHunger = 100.0f;
+	CurrentHunger = MaxHunger;
+	HungerDecreaseRate = 0.5f;
+	HealthDecreaseRateWhenHungerIs0 = 1.25f;
 }
 
 void UPlayerStatsComp::BeginPlay()
@@ -45,6 +56,9 @@ void UPlayerStatsComp::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 			RegenerateStamina(DeltaTime);
 		}
 	}
+
+	TickDecreaseHunger(DeltaTime);
+	TickDecreaseThirst(DeltaTime);
 }
 
 void UPlayerStatsComp::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -57,6 +71,10 @@ void UPlayerStatsComp::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UPlayerStatsComp, CurrentHealth);
 	DOREPLIFETIME(UPlayerStatsComp, MaxArmor);
 	DOREPLIFETIME(UPlayerStatsComp, CurrentArmor);
+	DOREPLIFETIME(UPlayerStatsComp, CurrentThirst);
+	DOREPLIFETIME(UPlayerStatsComp, MaxThirst);
+	DOREPLIFETIME(UPlayerStatsComp, CurrentHunger);
+	DOREPLIFETIME(UPlayerStatsComp, MaxHunger);
 }
 
 void UPlayerStatsComp::OneTimeStaminaReduction(float AmountStamina)
@@ -66,17 +84,21 @@ void UPlayerStatsComp::OneTimeStaminaReduction(float AmountStamina)
 
 void UPlayerStatsComp::ChangeHealth(float Amount)
 {
-	CurrentHealth = CurrentHealth - Amount;
-	if (CurrentHealth <= 0.0f)
+	CurrentHealth = FMath::Clamp(CurrentHealth + Amount, 0, MaxHealth);
+	if (CurrentHealth == 0.0f)
 	{
-		CurrentHealth = 0.0f;
 		Death();
 	}
-	if (CurrentHealth >= MaxHealth)
-	{
-		CurrentHealth = MaxHealth;
-	}
-	
+}
+
+void UPlayerStatsComp::ChangeThirst(float Amount)
+{
+	CurrentThirst = FMath::Clamp(CurrentThirst + Amount, 0, MaxThirst);
+}
+
+void UPlayerStatsComp::ChangeHunger(float Amount)
+{
+	CurrentHunger = FMath::Clamp(CurrentHunger + Amount, 0, MaxHunger);
 }
 
 void UPlayerStatsComp::StartSprint()
@@ -97,7 +119,46 @@ void UPlayerStatsComp::TakeDamage(float AmountDamage)
 
 void UPlayerStatsComp::Death()
 {
-	ChangeHealth(5.0f);
+	if (CurrentArmor > 1000000)
+	{
+		CurrentHealth = 10;
+	}
+}
+
+void UPlayerStatsComp::TickDecreaseThirst(float DeltaTime)
+{
+	if (CurrentThirst > 0)
+	{
+		CurrentThirst = FMath::Clamp(CurrentThirst - ThirstDecreaseRate * DeltaTime, 0, MaxThirst);
+	}
+	else
+	{
+		TickDecreaseHealth(DeltaTime, HealthDecreaseRateWhenThirstIs0);
+	}
+}
+
+void UPlayerStatsComp::TickDecreaseHunger(float DeltaTime)
+{
+	if (CurrentHunger > 0)
+	{
+		CurrentHunger = FMath::Clamp(CurrentHunger - HungerDecreaseRate * DeltaTime, 0, MaxHunger);
+	}
+	else
+	{
+		TickDecreaseHealth(DeltaTime, HealthDecreaseRateWhenHungerIs0);
+	}
+}
+
+void UPlayerStatsComp::TickDecreaseHealth(float DeltaTime, float AmountHealth)
+{
+	if (CurrentHealth > 0)
+	{
+		CurrentHealth = FMath::Clamp(CurrentHealth - AmountHealth * DeltaTime, 0, MaxHealth);
+	}
+	else
+	{
+		Death();
+	}
 }
 
 void UPlayerStatsComp::ServerOneTimeStaminaReduction_Implementation(float AmountStamina)
@@ -145,6 +206,13 @@ void UPlayerStatsComp::RegenerateStamina(float DeltaTime)
 {
 	if (CurrentStamina < MaxStamina)
 	{
-		CurrentStamina = FMath::Clamp(CurrentStamina + StaminaRegenRate * DeltaTime, 0.0f, MaxStamina);
+		if (CurrentThirst > 0 && CurrentHunger > 0)
+		{
+			CurrentStamina = FMath::Clamp(CurrentStamina + StaminaRegenRate * DeltaTime, 0.0f, MaxStamina);
+		}
+		else
+		{
+			CurrentStamina = FMath::Clamp(CurrentStamina + StaminaRegenRateWhenHungerOrThirstIs0 * DeltaTime, 0.0f, MaxStamina);
+		}
 	}
 }

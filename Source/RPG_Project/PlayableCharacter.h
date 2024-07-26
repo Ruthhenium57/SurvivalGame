@@ -68,15 +68,12 @@ public:
 
 	UFUNCTION()
 	void UpdateHealthBar();
-
 	UFUNCTION()
 	void UpdateStaminaBar();
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
-	float StaminaRegenRate;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
-	float StaminaDecreaseRate;
+	UFUNCTION()
+	void UpdateThirstBar();
+	UFUNCTION()
+	void UpdateHungerBar();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
 	float NeedStaminaToJump;

@@ -9,6 +9,8 @@
 #include "MainHUDWidget.h"
 #include "HealthBarWidget.h"
 #include "StaminaBarWidget.h"
+#include "HungerBarWidget.h"
+#include "ThirstBarWidget.h"
 #include "GameHUD.h"
 #include "GameFramework/PlayerController.h"
 #include "Components/InputComponent.h"
@@ -37,8 +39,6 @@ APlayableCharacter::APlayableCharacter()
 	DefaultWalkSpeed = 600.0f;
 	SprintSpeed = 1200.0f;
 	bIsSprinting = false;
-	StaminaRegenRate = 7.0f;
-	StaminaDecreaseRate = 12.0f;
 	StaminaRegenDelay = 1.5f;
 	NeedStaminaToJump = 12.0f;
 }
@@ -71,6 +71,8 @@ void APlayableCharacter::Tick(float DeltaTime)
 
 	UpdateStaminaBar();
 	UpdateHealthBar();
+	UpdateHungerBar();
+	UpdateThirstBar();
 }
 
 	void APlayableCharacter::SetupPlayerInputComponent(UInputComponent * MainPlayerInput)
@@ -119,8 +121,6 @@ void APlayableCharacter::Jump()
 {
 	if (PlayerStatsComp->CurrentStamina > NeedStaminaToJump)
 	{
-		GetWorld()->GetTimerManager().ClearTimer(StaminaRegenTimerHandle);
-		GetWorld()->GetTimerManager().SetTimer(StaminaRegenTimerHandle, this, &APlayableCharacter::BeginStaminaRegen, StaminaRegenDelay, false);
 		PlayerStatsComp->bCanStaminaRegen = false;
 		bPressedJump = true;
 		if (HasAuthority())
@@ -210,6 +210,24 @@ void APlayableCharacter::UpdateStaminaBar()
 	{
 		float StaminaPercentage = PlayerStatsComp->CurrentStamina / PlayerStatsComp->MaxStamina;
 		MainHUDWidget->StaminaBarWidget->SetStamina(StaminaPercentage);
+	}
+}
+
+void APlayableCharacter::UpdateThirstBar()
+{
+	if (PlayerStatsComp && MainHUDWidget)
+	{
+		float ThirstPercentage = PlayerStatsComp->CurrentThirst / PlayerStatsComp->MaxThirst;
+		MainHUDWidget->ThirstBarWidget->SetThirst(ThirstPercentage);
+	}
+}
+
+void APlayableCharacter::UpdateHungerBar()
+{
+	if (PlayerStatsComp && MainHUDWidget)
+	{
+		float HungerPercentage = PlayerStatsComp->CurrentHunger / PlayerStatsComp->MaxHunger;
+		MainHUDWidget->HungerBarWidget->SetHunger(HungerPercentage);
 	}
 }
 
