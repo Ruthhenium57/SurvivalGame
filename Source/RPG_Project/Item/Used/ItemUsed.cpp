@@ -7,3 +7,8 @@ void UItemUsed::Use()
 {
 	UE_LOG(LogTemp, Display, TEXT("Item used"));
 }
+
+void UItemUsed::Interact()
+{
+	Super::Interact();
+}

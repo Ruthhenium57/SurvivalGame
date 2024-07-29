@@ -19,8 +19,8 @@
 
 APlayableCharacter::APlayableCharacter()
 {
-	//FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-	//FirstPersonCameraComponent->SetupAttachment(GetMesh(), TEXT("head"));
+	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+	FirstPersonCamera->SetupAttachment(GetMesh(), TEXT("Head"));
 
 	PlayerStatsComp = CreateDefaultSubobject<UPlayerStatsComp>(TEXT("PlayerStatsComp"));
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
@@ -67,7 +67,20 @@ void APlayableCharacter::Tick(float DeltaTime)
 	UpdateThirstBar();
 }
 
-	void APlayableCharacter::SetupPlayerInputComponent(UInputComponent * MainPlayerInput)
+bool APlayableCharacter::PerformLineTrace(FHitResult& HitResult) const
+{
+	FVector Start = FirstPersonCamera->GetComponentLocation();
+	FVector ForwardVector = FirstPersonCamera->GetForwardVector();
+	FVector End = ((ForwardVector * 500) + Start);
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(this);
+
+	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2, 0, 1);
+
+	return GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, CollisionParams);
+}
+
+void APlayableCharacter::SetupPlayerInputComponent(UInputComponent * MainPlayerInput)
 {
 	Super::SetupPlayerInputComponent(MainPlayerInput);
 
@@ -85,6 +98,7 @@ void APlayableCharacter::Tick(float DeltaTime)
 	MainPlayerInput->BindAction("Sprint", IE_Released, this, &APlayableCharacter::StopSprint);
 
 
+	MainPlayerInput->BindAction("Interact", IE_Pressed, this, &APlayableCharacter::Interact);
 	//MainPlayerInput->BindAction("DebugKey1", IE_Pressed, this, &APlayableCharacter::Debug1);
 	//MainPlayerInput->BindAction("DebugKey2", IE_Pressed, this, &APlayableCharacter::Debug2);
 	//MainPlayerInput->BindAction("DebugKey3", IE_Pressed, this, &APlayableCharacter::Debug3);
@@ -231,6 +245,23 @@ void APlayableCharacter::UpdateHungerBar()
 void APlayableCharacter::BeginStaminaRegen()
 {
 	PlayerStatsComp->bCanStaminaRegen = true;
+}
+
+void APlayableCharacter::Interact()
+{
+	FHitResult HitResult;
+	if (PerformLineTrace(HitResult))
+	{
+		AActor* HitActor = HitResult.GetActor();
+		if (HitActor && HitActor->GetClass()->ImplementsInterface(UInteractableInterface::StaticClass()))
+		{
+			IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor);
+			if (Interactable)
+			{
+				Interactable->Interact();
+			}
+		}
+	}
 }
 
 void APlayableCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

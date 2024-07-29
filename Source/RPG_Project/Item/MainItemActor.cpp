@@ -14,7 +14,7 @@ AMainItemActor::AMainItemActor()
 void AMainItemActor::Interact()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Item Interacted"));
-	
+	ItemLogic->Interact();
 }
 
 // Called when the game starts or when spawned

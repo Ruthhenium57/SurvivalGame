@@ -2,3 +2,8 @@
 
 
 #include "MainItem.h"
+
+void UMainItem::Interact()
+{
+
+}

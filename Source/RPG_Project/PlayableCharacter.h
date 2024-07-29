@@ -8,6 +8,7 @@
 #include "Camera/CameraComponent.h"
 #include "Item/InventoryComponent.h"
 #include "GameFramework/Character.h"
+#include "InteractableInterface.h"
 #include "InputActionValue.h"
 #include "PlayerStatsComp.h"
 #include "PlayableCharacter.generated.h"
@@ -42,9 +43,11 @@ private:
 	float SprintSpeed;
 	bool bIsSprinting;
 
+	bool PerformLineTrace(FHitResult& HitResult) const;
+
 public:
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
-	//class UCameraComponent* FirstPersonCameraComponent;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
+	class UCameraComponent* FirstPersonCamera;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Camera)
 	float BaseTurnRate;
@@ -98,6 +101,8 @@ public:
 	FTimerHandle StaminaRegenTimerHandle;
 	float StaminaRegenDelay;
 	void BeginStaminaRegen();
+
+	void Interact();
 
 	//UFUNCTION(BlueprintCallable, Category = "Inventory")
 	//void PickUpItem(UMainItem* Item, int32 Quantity);

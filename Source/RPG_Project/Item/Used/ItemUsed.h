@@ -16,4 +16,6 @@ class RPG_PROJECT_API UItemUsed : public UMainItem
 	
 public:
 	virtual void Use();
+
+	virtual void Interact() override;
 };
