@@ -76,7 +76,7 @@ bool APlayableCharacter::PerformLineTrace(FHitResult& HitResult) const
 	CollisionParams.AddIgnoredActor(this);
 
 	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2, 0, 1);
-
+	UE_LOG(LogTemp, Warning, TEXT("DrawDebugLine"));
 	return GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, CollisionParams);
 }
 
@@ -249,26 +249,35 @@ void APlayableCharacter::BeginStaminaRegen()
 
 void APlayableCharacter::Interact()
 {
+	UE_LOG(LogTemp, Warning, TEXT("CallInteract"));
 	FHitResult HitResult;
 	if (PerformLineTrace(HitResult))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("LineTraceIsTrue"));
 		AActor* HitActor = HitResult.GetActor();
 		if (HitActor && HitActor->GetClass()->ImplementsInterface(UInteractableInterface::StaticClass()))
 		{
-			IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor);
-			if (Interactable)
+			UE_LOG(LogTemp, Warning, TEXT("InterfaceIsFinded"));
+			UMainItem* Item = Cast<UMainItem>(HitActor);
+			if (Item)
 			{
-				Interactable->Interact();
+				PickUpItem(Item, 1);
+				UE_LOG(LogTemp, Warning, TEXT("CharacterPickUpItem"));
 			}
 		}
 	}
+}
+
+void APlayableCharacter::PickUpItem(UMainItem* Item, int32 Quantity)
+{
+	InventoryComponent->AddItem(Item, Quantity);
 }
 
 void APlayableCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	//DOREPLIFETIME(AMyCharacter, Health); // Добавляем свойство Health для репликации
+	//DOREPLIFETIME(AMyCharacter, Health);
 }
 
 void APlayableCharacter::ServerSetSprintSpeed_Implementation(float NewSpeed)

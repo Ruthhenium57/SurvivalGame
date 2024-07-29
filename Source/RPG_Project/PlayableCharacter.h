@@ -104,8 +104,8 @@ public:
 
 	void Interact();
 
-	//UFUNCTION(BlueprintCallable, Category = "Inventory")
-	//void PickUpItem(UMainItem* Item, int32 Quantity);
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void PickUpItem(UMainItem* Item, int32 Quantity);
 
 	//UFUNCTION(BlueprintCallable, Category = "Inventory")
 	//void DropItem(UMainItem* Item, int32 Quantity);

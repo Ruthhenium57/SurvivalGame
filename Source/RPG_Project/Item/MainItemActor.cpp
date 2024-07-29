@@ -2,11 +2,13 @@
 
 
 #include "MainItemActor.h"
+#include "Components/SceneComponent.h"
 
 // Sets default values
 AMainItemActor::AMainItemActor()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
+	RootComponent = SkeletalMesh;
 	PrimaryActorTick.bCanEverTick = true;
 	ItemLogic = CreateDefaultSubobject<UMainItem>(TEXT("ItemLogic"));
 }
