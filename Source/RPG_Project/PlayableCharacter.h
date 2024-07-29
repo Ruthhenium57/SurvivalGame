@@ -6,6 +6,7 @@
 #include "MainCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Item/InventoryComponent.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "PlayerStatsComp.h"
@@ -20,22 +21,35 @@ class RPG_PROJECT_API APlayableCharacter : public AMainCharacter
 	GENERATED_BODY()
 
 public:
-
 	APlayableCharacter();
 
 protected:
-
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-public:
+private:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UPlayerStatsComp* PlayerStatsComp;
 
-		UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	USpringArmComponent* SpringArm;
-		UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	UCameraComponent* Camera;
-	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HUD", meta = (AllowPrivateAccess = "true"))
+	UMainHUDWidget* MainHUDWidget;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UInventoryComponent* InventoryComponent;
+
+	float DefaultWalkSpeed;
+	float SprintSpeed;
+	bool bIsSprinting;
+
+public:
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
+	//class UCameraComponent* FirstPersonCameraComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Camera)
+	float BaseTurnRate;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Camera)
+	float BaseLookUpRate;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* MainPlayerInput) override;
 
@@ -44,6 +58,9 @@ public:
 	void Look(float value);
 	void Turn(float value);
 	void Jump();
+	//void Debug1();
+	//void Debug2();
+	//void Debug3();
 	void StopJump();
 	UFUNCTION()
 	void OnStaminaEnd();
@@ -82,14 +99,9 @@ public:
 	float StaminaRegenDelay;
 	void BeginStaminaRegen();
 
-private:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	UPlayerStatsComp* PlayerStatsComp;
+	//UFUNCTION(BlueprintCallable, Category = "Inventory")
+	//void PickUpItem(UMainItem* Item, int32 Quantity);
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HUD", meta = (AllowPrivateAccess = "true"))
-	UMainHUDWidget* MainHUDWidget;
-
-	float DefaultWalkSpeed;
-	float SprintSpeed;
-	bool bIsSprinting;
+	//UFUNCTION(BlueprintCallable, Category = "Inventory")
+	//void DropItem(UMainItem* Item, int32 Quantity);
 };

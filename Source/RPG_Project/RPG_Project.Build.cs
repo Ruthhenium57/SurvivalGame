@@ -1,5 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
+using System.IO;
 using UnrealBuildTool;
 
 public class RPG_Project : ModuleRules
@@ -8,8 +9,10 @@ public class RPG_Project : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "UMG", "Slate", "SlateCore", "EnhancedInput" });
+        PublicIncludePaths.AddRange(new string[] { Path.Combine(ModuleDirectory, "Item"), Path.Combine(ModuleDirectory, "UI") });
+        PrivateIncludePaths.AddRange(new string[] {  });
 
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "UMG", "Slate", "SlateCore", "EnhancedInput" });
         PrivateDependencyModuleNames.AddRange(new string[] { "Projects", "OnlineSubsystem", "OnlineSubsystemUtils" });
 
 		// Uncomment if you are using Slate UI

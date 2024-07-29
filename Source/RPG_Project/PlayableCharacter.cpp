@@ -19,28 +19,20 @@
 
 APlayableCharacter::APlayableCharacter()
 {
-	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
-	SpringArm->SetupAttachment(RootComponent);
-	SpringArm->TargetArmLength = 500.0f;
-
-
-	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("ThirstPersonCamera"));
-	Camera->SetupAttachment(SpringArm);
-
-	SpringArm->bUsePawnControlRotation = true;
-	Camera->bUsePawnControlRotation = false;
-
-	bUseControllerRotationPitch = false;
-	bUseControllerRotationYaw = false;
-	bUseControllerRotationRoll = false;
+	//FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+	//FirstPersonCameraComponent->SetupAttachment(GetMesh(), TEXT("head"));
 
 	PlayerStatsComp = CreateDefaultSubobject<UPlayerStatsComp>(TEXT("PlayerStatsComp"));
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 
 	DefaultWalkSpeed = 600.0f;
 	SprintSpeed = 1200.0f;
 	bIsSprinting = false;
 	StaminaRegenDelay = 1.5f;
 	NeedStaminaToJump = 12.0f;
+
+	BaseTurnRate = 45.0f;
+	BaseLookUpRate = 45.0f;
 }
 
 void APlayableCharacter::BeginPlay()
@@ -83,22 +75,27 @@ void APlayableCharacter::Tick(float DeltaTime)
 	MainPlayerInput->BindAxis("MoveForward", this, &APlayableCharacter::MoveForward);
 	MainPlayerInput->BindAxis("MoveRight", this, &APlayableCharacter::MoveRight);
 	
-
 	MainPlayerInput->BindAxis("LookUpDown", this, &APlayableCharacter::Look);
 	MainPlayerInput->BindAxis("Turn", this, &APlayableCharacter::Turn);
 	
-
 	MainPlayerInput->BindAction("Jump", IE_Pressed, this, &APlayableCharacter::Jump);
 	MainPlayerInput->BindAction("Jump", IE_Released, this, &APlayableCharacter::StopJump);
 
 	MainPlayerInput->BindAction("Sprint", IE_Pressed, this, &APlayableCharacter::Sprint);
 	MainPlayerInput->BindAction("Sprint", IE_Released, this, &APlayableCharacter::StopSprint);
+
+
+	//MainPlayerInput->BindAction("DebugKey1", IE_Pressed, this, &APlayableCharacter::Debug1);
+	//MainPlayerInput->BindAction("DebugKey2", IE_Pressed, this, &APlayableCharacter::Debug2);
+	//MainPlayerInput->BindAction("DebugKey3", IE_Pressed, this, &APlayableCharacter::Debug3);
 }
 
 void APlayableCharacter::MoveForward(float Value)
 {
-	FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
-	AddMovementInput(Direction, Value);
+	if (Value != 0.0f)
+	{
+		AddMovementInput(GetActorForwardVector(), Value);
+	}
 }
 
 void APlayableCharacter::MoveRight(float Value)
@@ -109,12 +106,12 @@ void APlayableCharacter::MoveRight(float Value)
 
 void APlayableCharacter::Look(float Value)
 {
-	AddControllerPitchInput(Value);
+	AddControllerPitchInput(Value * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
 void APlayableCharacter::Turn(float Value)
 {
-	AddControllerYawInput(Value);
+	AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 }
 
 void APlayableCharacter::Jump()
