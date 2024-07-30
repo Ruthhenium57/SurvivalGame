@@ -11,6 +11,7 @@
 #include "StaminaBarWidget.h"
 #include "HungerBarWidget.h"
 #include "ThirstBarWidget.h"
+#include "InteractableInterface.h"
 #include "GameHUD.h"
 #include "GameFramework/PlayerController.h"
 #include "Components/InputComponent.h"
@@ -249,28 +250,20 @@ void APlayableCharacter::BeginStaminaRegen()
 
 void APlayableCharacter::Interact()
 {
-	UE_LOG(LogTemp, Warning, TEXT("CallInteract"));
 	FHitResult HitResult;
 	if (PerformLineTrace(HitResult))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("LineTraceIsTrue"));
 		AActor* HitActor = HitResult.GetActor();
 		if (HitActor && HitActor->GetClass()->ImplementsInterface(UInteractableInterface::StaticClass()))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("InterfaceIsFinded"));
-			UMainItem* Item = Cast<UMainItem>(HitActor);
-			if (Item)
+			IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor);
+			if (Interactable)
 			{
-				PickUpItem(Item, 1);
-				UE_LOG(LogTemp, Warning, TEXT("CharacterPickUpItem"));
+				Interactable->Interact(this);
+				UE_LOG(LogTemp, Warning, TEXT("CharacterInteractWithItem"));
 			}
 		}
 	}
-}
-
-void APlayableCharacter::PickUpItem(UMainItem* Item, int32 Quantity)
-{
-	InventoryComponent->AddItem(Item, Quantity);
 }
 
 void APlayableCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

@@ -17,7 +17,7 @@ public:
 	// Sets default values for this actor's properties
 	AMainItemActor();
 
-	virtual void Interact() override;
+	virtual void Interact(ACharacter* Character) override;
 
 protected:
 	// Called when the game starts or when spawned

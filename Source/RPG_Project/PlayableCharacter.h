@@ -8,7 +8,6 @@
 #include "Camera/CameraComponent.h"
 #include "Item/InventoryComponent.h"
 #include "GameFramework/Character.h"
-#include "InteractableInterface.h"
 #include "InputActionValue.h"
 #include "PlayerStatsComp.h"
 #include "PlayableCharacter.generated.h"
@@ -36,9 +35,6 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HUD", meta = (AllowPrivateAccess = "true"))
 	UMainHUDWidget* MainHUDWidget;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	UInventoryComponent* InventoryComponent;
-
 	float DefaultWalkSpeed;
 	float SprintSpeed;
 	bool bIsSprinting;
@@ -48,6 +44,9 @@ private:
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
 	class UCameraComponent* FirstPersonCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UInventoryComponent* InventoryComponent;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Camera)
 	float BaseTurnRate;
@@ -103,10 +102,4 @@ public:
 	void BeginStaminaRegen();
 
 	void Interact();
-
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void PickUpItem(UMainItem* Item, int32 Quantity);
-
-	//UFUNCTION(BlueprintCallable, Category = "Inventory")
-	//void DropItem(UMainItem* Item, int32 Quantity);
 };

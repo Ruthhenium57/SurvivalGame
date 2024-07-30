@@ -13,10 +13,13 @@ AMainItemActor::AMainItemActor()
 	ItemLogic = CreateDefaultSubobject<UMainItem>(TEXT("ItemLogic"));
 }
 
-void AMainItemActor::Interact()
+void AMainItemActor::Interact(ACharacter* Character)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Item Interacted"));
-	ItemLogic->Interact();
+	//if (Character)
+	//{
+	//	UE_LOG(LogTemp, Warning, TEXT("Item Interacted"));
+	//	ItemLogic->Interact(Character);
+	//}
 }
 
 // Called when the game starts or when spawned

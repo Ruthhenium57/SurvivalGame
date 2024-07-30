@@ -2,8 +2,13 @@
 
 
 #include "MainItem.h"
+#include "../PlayableCharacter.h"
 
-void UMainItem::Interact()
+void UMainItem::Interact(ACharacter* Character)
 {
-
+	APlayableCharacter* PlayableCharacter = Cast<APlayableCharacter>(Character);
+	if (PlayableCharacter)
+	{
+		PlayableCharacter->InventoryComponent->AddItem(this, 1);
+	}
 }
