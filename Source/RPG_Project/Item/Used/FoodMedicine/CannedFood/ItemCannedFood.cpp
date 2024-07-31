@@ -3,3 +3,8 @@
 
 #include "ItemCannedFood.h"
 
+UItemCannedFood::UItemCannedFood()
+{
+	Name = "Canned Food";
+	MaxQuantity = 5;
+}

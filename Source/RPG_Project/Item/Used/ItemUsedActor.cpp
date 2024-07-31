@@ -5,10 +5,10 @@
 
 AItemUsedActor::AItemUsedActor()
 {
-	
+	ItemLogic = CreateDefaultSubobject<UItemUsed>(TEXT("ItemUsedLogic"));
 }
 
-void AItemUsedActor::CallUse()
+void AItemUsedActor::Use()
 {
 	if (UItemUsed* ItemUsed = Cast<UItemUsed>(ItemLogic))
 	{

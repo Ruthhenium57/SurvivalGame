@@ -14,4 +14,5 @@ class RPG_PROJECT_API UItemCannedFood : public UItemFoodMedicine
 {
 	GENERATED_BODY()
 	
+	UItemCannedFood();
 };

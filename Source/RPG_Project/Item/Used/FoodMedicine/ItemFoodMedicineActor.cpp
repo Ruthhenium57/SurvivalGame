@@ -5,7 +5,7 @@
 
 AItemFoodMedicineActor::AItemFoodMedicineActor()
 {
-	
+	ItemLogic = CreateDefaultSubobject<UItemFoodMedicine>(TEXT("ItemFoodMedicineLogic"));
 }
 
 void AItemFoodMedicineActor::CallUse()

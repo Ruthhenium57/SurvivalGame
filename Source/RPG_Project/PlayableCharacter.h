@@ -102,4 +102,6 @@ public:
 	void BeginStaminaRegen();
 
 	void Interact();
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerInteract(AActor* HitActor);
 };

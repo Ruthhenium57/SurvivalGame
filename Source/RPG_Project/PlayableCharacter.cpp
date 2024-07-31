@@ -77,7 +77,6 @@ bool APlayableCharacter::PerformLineTrace(FHitResult& HitResult) const
 	CollisionParams.AddIgnoredActor(this);
 
 	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2, 0, 1);
-	UE_LOG(LogTemp, Warning, TEXT("DrawDebugLine"));
 	return GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, CollisionParams);
 }
 
@@ -256,14 +255,33 @@ void APlayableCharacter::Interact()
 		AActor* HitActor = HitResult.GetActor();
 		if (HitActor && HitActor->GetClass()->ImplementsInterface(UInteractableInterface::StaticClass()))
 		{
-			IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor);
-			if (Interactable)
+			if (HasAuthority())
 			{
-				Interactable->Interact(this);
-				UE_LOG(LogTemp, Warning, TEXT("CharacterInteractWithItem"));
+				ServerInteract(HitActor);
+			}
+			else
+			{
+				ServerInteract(HitActor);
 			}
 		}
 	}
+}
+
+void APlayableCharacter::ServerInteract_Implementation(AActor* HitActor)
+{
+	if (HitActor && HitActor->GetClass()->ImplementsInterface(UInteractableInterface::StaticClass()))
+	{
+		IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor);
+		if (Interactable)
+		{
+			Interactable->Interact(this);
+		}
+	}
+}
+
+bool APlayableCharacter::ServerInteract_Validate(AActor* HitActor)
+{
+	return true;
 }
 
 void APlayableCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

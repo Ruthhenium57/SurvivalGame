@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "../ItemFoodMedicineActor.h"
+#include "ItemCannedFood.h"
 #include "ItemCannedFoodActor.generated.h"
 
 /**
@@ -14,4 +15,5 @@ class RPG_PROJECT_API AItemCannedFoodActor : public AItemFoodMedicineActor
 {
 	GENERATED_BODY()
 	
+	AItemCannedFoodActor();
 };

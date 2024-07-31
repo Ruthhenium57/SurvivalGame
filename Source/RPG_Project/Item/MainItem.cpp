@@ -4,11 +4,19 @@
 #include "MainItem.h"
 #include "../PlayableCharacter.h"
 
-void UMainItem::Interact(ACharacter* Character)
+bool UMainItem::Interact(ACharacter* Character)
 {
 	APlayableCharacter* PlayableCharacter = Cast<APlayableCharacter>(Character);
 	if (PlayableCharacter)
 	{
-		PlayableCharacter->InventoryComponent->AddItem(this, 1);
+		if (PlayableCharacter->InventoryComponent->AddItem(this, 1))
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
+	return false;
 }

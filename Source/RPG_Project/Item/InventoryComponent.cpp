@@ -139,7 +139,7 @@ void UInventoryComponent::LogInventory() const
 	{
 		if (Slot.Item)
 		{
-			UE_LOG(LogTemp, Display, TEXT("Item: %s, Quantity: %d"), *Slot.Item->Name, Slot.Quantity);
+			UE_LOG(LogTemp, Error, TEXT("Owner: %s, Item: %s, Quantity: %d"), *GetOwner()->GetName(), *Slot.Item->Name, Slot.Quantity);
 		}
 	}
 }

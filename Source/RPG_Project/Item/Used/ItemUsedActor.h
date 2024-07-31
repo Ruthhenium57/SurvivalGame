@@ -18,5 +18,5 @@ class RPG_PROJECT_API AItemUsedActor : public AMainItemActor
 public:
 	AItemUsedActor();
 
-	void CallUse();
+	void Use();
 };

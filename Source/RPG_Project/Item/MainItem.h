@@ -28,5 +28,5 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	UTexture2D* Icon;
 
-	virtual void Interact(ACharacter* Character);
+	virtual bool Interact(ACharacter* Character);
 };

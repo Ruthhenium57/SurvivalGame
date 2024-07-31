@@ -3,3 +3,7 @@
 
 #include "ItemCannedFoodActor.h"
 
+AItemCannedFoodActor::AItemCannedFoodActor()
+{
+	ItemLogic = CreateDefaultSubobject<UItemCannedFood>(TEXT("ItemCannedFoodLogic"));
+}

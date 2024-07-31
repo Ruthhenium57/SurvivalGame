@@ -15,18 +15,39 @@ AMainItemActor::AMainItemActor()
 
 void AMainItemActor::Interact(ACharacter* Character)
 {
-	//if (Character)
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("Item Interacted"));
-	//	ItemLogic->Interact(Character);
-	//}
+	UE_LOG(LogTemp, Warning, TEXT("AMainItemActor::Interact called by %s"), *Character->GetName());
+	if (Character && ItemLogic)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Item Interacted"));
+		if (ItemLogic->Interact(Character))
+		{
+			FVector NewLocation(9999, 9999, 9999);
+			SetActorLocation(NewLocation);
+			SetActorHiddenInGame(true);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Item Not Be Added"));
+		}
+	}
+	if (ItemLogic == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ItemLogicIsNullptr"));
+	}
 }
 
 // Called when the game starts or when spawned
 void AMainItemActor::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	if (ItemLogic == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ItemLogic is nullptr in AMainItemActor::BeginPlay"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ItemLogic successfully initialized in AMainItemActor::BeginPlay"));
+	}
 }
 
 // Called every frame
