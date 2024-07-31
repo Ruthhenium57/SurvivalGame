@@ -7,6 +7,9 @@
 #include "MainItem.h"
 #include "InventoryComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnItemAdded, bool, bSuccess, UMainItem*, Item, int32, Quantity);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnItemRemoved, bool, bSuccess, UMainItem*, Item, int32, Quantity);
+
 USTRUCT(BlueprintType)
 struct FInventorySlot
 {
@@ -21,7 +24,7 @@ struct FInventorySlot
 	FInventorySlot() : Item(nullptr), Quantity(0) {}
 };
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS( ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class RPG_PROJECT_API UInventoryComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -52,7 +55,25 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void LogInventory() const;
 
+	UPROPERTY(BlueprintAssignable, Category = "Inventory")
+	FOnItemAdded OnItemAdded;
+
+	UPROPERTY(BlueprintAssignable, Category = "Inventory")
+	FOnItemRemoved OnItemRemoved;
+
 private:
 	UFUNCTION()
 	void OnRep_Inventory();
+
+protected:
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerAddItem(UMainItem* Item, int32 Quantity);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerRemoveItem(UMainItem* Item, int32 Quantity);
+
+private:
+	bool AddItemInternal(UMainItem* Item, int32 Quantity);
+
+	bool RemoveItemInternal(UMainItem* Item, int32 Quantity);
 };

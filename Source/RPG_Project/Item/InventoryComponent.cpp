@@ -32,11 +32,94 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
 bool UInventoryComponent::AddItem(UMainItem* Item, int32 Quantity)
 {
+	if (GetOwnerRole() == ROLE_Authority)
+	{
+		return AddItemInternal(Item, Quantity);
+	}
+	else
+	{
+		ServerAddItem(Item, Quantity);
+	}
+	return false;
+}
+
+bool UInventoryComponent::RemoveItem(UMainItem* Item, int32 Quantity)
+{
+	if (GetOwnerRole() == ROLE_Authority)
+	{
+		return RemoveItemInternal(Item, Quantity);
+	}
+	else
+	{
+		ServerRemoveItem(Item, Quantity);
+	}
+	return false;
+}
+
+bool UInventoryComponent::HasItem(UMainItem* Item, int32 Quantity) const
+{
 	if (!Item || Quantity <= 0)
 	{
 		return false;
 	}
 
+	for (const FInventorySlot& Slot : Inventory)
+	{
+		if (Slot.Item == Item && Slot.Quantity >= Quantity)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void UInventoryComponent::LogInventory() const
+{
+	if (GetOwnerRole() == ROLE_Authority)
+	{
+		for (const FInventorySlot& Slot : Inventory)
+		{
+			if (Slot.Item)
+			{
+				UE_LOG(LogTemp, Error, TEXT("Owner: %s, Item: %s, Quantity: %d"), *GetOwner()->GetName(), *Slot.Item->Name, Slot.Quantity);
+			}
+		}
+	}
+}
+
+void UInventoryComponent::OnRep_Inventory()
+{
+	LogInventory();
+}
+
+void UInventoryComponent::ServerAddItem_Implementation(UMainItem* Item, int32 Quantity)
+{
+	OnItemAdded.Broadcast(AddItemInternal(Item, Quantity), Item, Quantity);
+}
+
+bool UInventoryComponent::ServerAddItem_Validate(UMainItem* Item, int32 Quantity)
+{
+	return true;
+}
+
+void UInventoryComponent::ServerRemoveItem_Implementation(UMainItem* Item, int32 Quantity)
+{
+	OnItemRemoved.Broadcast(RemoveItemInternal(Item, Quantity), Item, Quantity);
+}
+
+bool UInventoryComponent::ServerRemoveItem_Validate(UMainItem* Item, int32 Quantity)
+{
+	return true;
+}
+
+bool UInventoryComponent::AddItemInternal(UMainItem* Item, int32 Quantity)
+{
+	if (!Item || Quantity <= 0)
+	{
+		return false;
+	}
+	
 	for (FInventorySlot& Slot : Inventory)
 	{
 		if (Slot.Item == Item)
@@ -81,7 +164,7 @@ bool UInventoryComponent::AddItem(UMainItem* Item, int32 Quantity)
 	return false;
 }
 
-bool UInventoryComponent::RemoveItem(UMainItem* Item, int32 Quantity)
+bool UInventoryComponent::RemoveItemInternal(UMainItem* Item, int32 Quantity)
 {
 	if (!Item || Quantity <= 0)
 	{
@@ -113,38 +196,4 @@ bool UInventoryComponent::RemoveItem(UMainItem* Item, int32 Quantity)
 	}
 
 	return false;
-}
-
-bool UInventoryComponent::HasItem(UMainItem* Item, int32 Quantity) const
-{
-	if (!Item || Quantity <= 0)
-	{
-		return false;
-	}
-
-	for (const FInventorySlot& Slot : Inventory)
-	{
-		if (Slot.Item == Item && Slot.Quantity >= Quantity)
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
-void UInventoryComponent::LogInventory() const
-{
-	for (const FInventorySlot& Slot : Inventory)
-	{
-		if (Slot.Item)
-		{
-			UE_LOG(LogTemp, Error, TEXT("Owner: %s, Item: %s, Quantity: %d"), *GetOwner()->GetName(), *Slot.Item->Name, Slot.Quantity);
-		}
-	}
-}
-
-void UInventoryComponent::OnRep_Inventory()
-{
-	LogInventory();
 }
