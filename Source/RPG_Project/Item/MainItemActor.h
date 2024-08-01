@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "MainItem.h"
 #include "../InteractableInterface.h"
 #include "MainItemActor.generated.h"
 
@@ -23,11 +22,20 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "Item")
-	UMainItem* ItemLogic;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh")
 	USkeletalMeshComponent* SkeletalMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+	FString Name;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+	int32 MaxQuantity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+	FString Description;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+	UTexture2D* Icon;
 
 protected:
 	virtual void BeginPlay() override;

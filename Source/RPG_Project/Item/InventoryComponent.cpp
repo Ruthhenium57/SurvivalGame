@@ -21,7 +21,7 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(UInventoryComponent, Inventory)
+	DOREPLIFETIME(AMainItemActor*, Items);
 }
 
 
@@ -30,7 +30,7 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-bool UInventoryComponent::AddItem(UMainItem* Item, int32 Quantity)
+bool UInventoryComponent::AddItem(AMainItemActor* Item, int32 Quantity)
 {
 	if (GetOwnerRole() == ROLE_Authority)
 	{
@@ -39,11 +39,11 @@ bool UInventoryComponent::AddItem(UMainItem* Item, int32 Quantity)
 	else
 	{
 		ServerAddItem(Item, Quantity);
+		return false;
 	}
-	return false;
 }
 
-bool UInventoryComponent::RemoveItem(UMainItem* Item, int32 Quantity)
+bool UInventoryComponent::RemoveItem(AMainItemActor* Item, int32 Quantity)
 {
 	if (GetOwnerRole() == ROLE_Authority)
 	{
@@ -52,37 +52,26 @@ bool UInventoryComponent::RemoveItem(UMainItem* Item, int32 Quantity)
 	else
 	{
 		ServerRemoveItem(Item, Quantity);
-	}
-	return false;
-}
-
-bool UInventoryComponent::HasItem(UMainItem* Item, int32 Quantity) const
-{
-	if (!Item || Quantity <= 0)
-	{
 		return false;
 	}
+}
 
-	for (const FInventorySlot& Slot : Inventory)
-	{
-		if (Slot.Item == Item && Slot.Quantity >= Quantity)
-		{
-			return true;
-		}
-	}
+bool UInventoryComponent::HasItem(AMainItemActor* Item, int32 Quantity) const
+{
+	
 
 	return false;
 }
 
 void UInventoryComponent::LogInventory() const
 {
-	for (const FInventorySlot& Slot : Inventory)
-	{
-		if (Slot.Item)
-		{
-			UE_LOG(LogTemp, Error, TEXT("Owner: %s, Item: %s, Quantity: %d"), *GetOwner()->GetName(), *Slot.Item->GetName(), Slot.Quantity);
-		}
-	}
+	//for (const Items)
+	//{
+	//	if (Slot.Item)
+	//	{
+	//		UE_LOG(LogTemp, Error, TEXT("Owner: %s, Item: %s, Quantity: %d"), *GetOwner()->GetName(), *Slot.Item->GetName(), Slot.Quantity);
+	//	}
+	//}
 }
 
 void UInventoryComponent::OnRep_Inventory()
@@ -90,27 +79,27 @@ void UInventoryComponent::OnRep_Inventory()
 	LogInventory();
 }
 
-void UInventoryComponent::ServerAddItem_Implementation(UMainItem* Item, int32 Quantity)
+void UInventoryComponent::ServerAddItem_Implementation(AMainItemActor* Item, int32 Quantity)
 {
 	OnItemAdded.Broadcast(AddItemInternal(Item, Quantity), Item, Quantity);
 }
 
-bool UInventoryComponent::ServerAddItem_Validate(UMainItem* Item, int32 Quantity)
+bool UInventoryComponent::ServerAddItem_Validate(AMainItemActor* Item, int32 Quantity)
 {
 	return true;
 }
 
-void UInventoryComponent::ServerRemoveItem_Implementation(UMainItem* Item, int32 Quantity)
+void UInventoryComponent::ServerRemoveItem_Implementation(AMainItemActor* Item, int32 Quantity)
 {
 	OnItemRemoved.Broadcast(RemoveItemInternal(Item, Quantity), Item, Quantity);
 }
 
-bool UInventoryComponent::ServerRemoveItem_Validate(UMainItem* Item, int32 Quantity)
+bool UInventoryComponent::ServerRemoveItem_Validate(AMainItemActor* Item, int32 Quantity)
 {
 	return true;
 }
 
-bool UInventoryComponent::AddItemInternal(UMainItem* Item, int32 Quantity)
+bool UInventoryComponent::AddItemInternal(AMainItemActor* Item, int32 Quantity)
 {
 	if (!Item || Quantity <= 0)
 	{
@@ -161,7 +150,7 @@ bool UInventoryComponent::AddItemInternal(UMainItem* Item, int32 Quantity)
 	return false;
 }
 
-bool UInventoryComponent::RemoveItemInternal(UMainItem* Item, int32 Quantity)
+bool UInventoryComponent::RemoveItemInternal(AMainItemActor* Item, int32 Quantity)
 {
 	if (!Item || Quantity <= 0)
 	{

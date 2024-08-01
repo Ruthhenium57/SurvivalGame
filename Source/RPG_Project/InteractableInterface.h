@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "PlayableCharacter.h"
 #include "InteractableInterface.generated.h"
 
 // This class does not need to be modified.

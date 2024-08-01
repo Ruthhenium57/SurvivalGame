@@ -5,13 +5,10 @@
 
 AItemFoodMedicineActor::AItemFoodMedicineActor()
 {
-	ItemLogic = CreateDefaultSubobject<UItemFoodMedicine>(TEXT("ItemFoodMedicineLogic"));
+	
 }
 
 void AItemFoodMedicineActor::CallUse()
 {
-	if (UItemFoodMedicine* ItemFoodMedicine = Cast<UItemFoodMedicine>(ItemLogic))
-	{
-		ItemFoodMedicine->Use();
-	}
+	
 }

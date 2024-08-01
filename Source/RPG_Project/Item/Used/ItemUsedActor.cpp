@@ -5,13 +5,20 @@
 
 AItemUsedActor::AItemUsedActor()
 {
-	ItemLogic = CreateDefaultSubobject<UItemUsed>(TEXT("ItemUsedLogic"));
+
+}
+
+void AItemUsedActor::Tick(float DeltaTime)
+{
+
 }
 
 void AItemUsedActor::Use()
 {
-	if (UItemUsed* ItemUsed = Cast<UItemUsed>(ItemLogic))
-	{
-		ItemUsed->Use();
-	}
+	
+}
+
+void AItemUsedActor::BeginPlay()
+{
+
 }

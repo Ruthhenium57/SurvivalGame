@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "MainItemActor.h"
-#include "ItemUsed.h"
 #include "ItemUsedActor.generated.h"
 
 /**
@@ -17,6 +16,11 @@ class RPG_PROJECT_API AItemUsedActor : public AMainItemActor
 	
 public:
 	AItemUsedActor();
+	
+	virtual void Tick(float DeltaTime) override;
 
 	void Use();
+
+protected:
+	virtual void BeginPlay() override;
 };

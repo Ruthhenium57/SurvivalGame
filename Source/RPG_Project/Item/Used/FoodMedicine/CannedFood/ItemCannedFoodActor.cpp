@@ -5,5 +5,5 @@
 
 AItemCannedFoodActor::AItemCannedFoodActor()
 {
-	ItemLogic = CreateDefaultSubobject<UItemCannedFood>(TEXT("ItemCannedFoodLogic"));
+	
 }

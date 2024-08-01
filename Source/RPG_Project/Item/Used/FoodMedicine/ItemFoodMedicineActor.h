@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "../ItemUsedActor.h"
-#include "ItemFoodMedicine.h"
 #include "ItemFoodMedicineActor.generated.h"
 
 /**
