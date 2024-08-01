@@ -21,7 +21,7 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AMainItemActor*, Items);
+	DOREPLIFETIME(UInventoryComponent, Items);
 }
 
 
@@ -30,48 +30,65 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-bool UInventoryComponent::AddItem(AMainItemActor* Item, int32 Quantity)
+bool UInventoryComponent::AddItem(AMainItemActor* Item)
 {
 	if (GetOwnerRole() == ROLE_Authority)
 	{
-		return AddItemInternal(Item, Quantity);
+		return AddItemInternal(Item);
 	}
 	else
 	{
-		ServerAddItem(Item, Quantity);
+		ServerAddItem(Item);
 		return false;
 	}
 }
 
-bool UInventoryComponent::RemoveItem(AMainItemActor* Item, int32 Quantity)
+bool UInventoryComponent::RemoveItem(AMainItemActor* Item)
 {
 	if (GetOwnerRole() == ROLE_Authority)
 	{
-		return RemoveItemInternal(Item, Quantity);
+		return RemoveItemInternal(Item);
 	}
 	else
 	{
-		ServerRemoveItem(Item, Quantity);
+		ServerRemoveItem(Item);
 		return false;
 	}
 }
 
-bool UInventoryComponent::HasItem(AMainItemActor* Item, int32 Quantity) const
+bool UInventoryComponent::HasItem(AMainItemActor* Item) const
 {
-	
-
-	return false;
+	return !FindAllItemsByClass(Item).IsEmpty();
 }
 
 void UInventoryComponent::LogInventory() const
 {
-	//for (const Items)
-	//{
-	//	if (Slot.Item)
-	//	{
-	//		UE_LOG(LogTemp, Error, TEXT("Owner: %s, Item: %s, Quantity: %d"), *GetOwner()->GetName(), *Slot.Item->GetName(), Slot.Quantity);
-	//	}
-	//}
+	for (AMainItemActor* InventoryItem : Items)
+	{
+		if (InventoryItem)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Owner: %s, Item: %s"), *GetOwner()->GetName(), *InventoryItem->GetName());
+		}
+	}
+}
+
+void UInventoryComponent::LogInventoryByClass(AMainItemActor* ItemClass) const
+{
+	int32 Quantity = FindAllItemsByClass(ItemClass).Num();
+	UE_LOG(LogTemp, Warning, TEXT("Item: %s, Quantity: %d"), *ItemClass->ItemName, Quantity);
+}
+
+TArray<AMainItemActor*> UInventoryComponent::FindAllItemsByClass(AMainItemActor* ItemClass) const
+{
+	TArray<AMainItemActor*> FoudedItems;
+	for (AMainItemActor* Item : Items)
+	{
+		if (Item->GetClass() == ItemClass->GetClass())
+		{
+			FoudedItems.Add(Item);
+		}
+	}
+	return TArray<AMainItemActor*>(FoudedItems);
 }
 
 void UInventoryComponent::OnRep_Inventory()
@@ -79,107 +96,46 @@ void UInventoryComponent::OnRep_Inventory()
 	LogInventory();
 }
 
-void UInventoryComponent::ServerAddItem_Implementation(AMainItemActor* Item, int32 Quantity)
+void UInventoryComponent::ServerAddItem_Implementation(AMainItemActor* Item)
 {
-	OnItemAdded.Broadcast(AddItemInternal(Item, Quantity), Item, Quantity);
+	//OnItemAdded.Broadcast(AddItemInternal(Item), Item);
+	AddItemInternal(Item);
 }
 
-bool UInventoryComponent::ServerAddItem_Validate(AMainItemActor* Item, int32 Quantity)
+bool UInventoryComponent::ServerAddItem_Validate(AMainItemActor* Item)
 {
 	return true;
 }
 
-void UInventoryComponent::ServerRemoveItem_Implementation(AMainItemActor* Item, int32 Quantity)
+void UInventoryComponent::ServerRemoveItem_Implementation(AMainItemActor* Item)
 {
-	OnItemRemoved.Broadcast(RemoveItemInternal(Item, Quantity), Item, Quantity);
+	//OnItemRemoved.Broadcast(RemoveItemInternal(Item), Item);
+	RemoveItemInternal(Item);
 }
 
-bool UInventoryComponent::ServerRemoveItem_Validate(AMainItemActor* Item, int32 Quantity)
+bool UInventoryComponent::ServerRemoveItem_Validate(AMainItemActor* Item)
 {
 	return true;
 }
 
-bool UInventoryComponent::AddItemInternal(AMainItemActor* Item, int32 Quantity)
+bool UInventoryComponent::AddItemInternal(AMainItemActor* Item)
 {
-	if (!Item || Quantity <= 0)
+	if (Item)
 	{
-		return false;
-	}
-	
-	for (FInventorySlot& Slot : Inventory)
-	{
-		if (Slot.Item == Item)
+		int32 TotalQuantity = FindAllItemsByClass(Item).Num();
+		if (FindAllItemsByClass(Item).Num() < Item->MaxStack)
 		{
-			int32 SpaceLeft = Item->MaxQuantity - Slot.Quantity;
-			if (SpaceLeft > 0)
-			{
-				int32 ToAdd = FMath::Min(SpaceLeft, Quantity);
-				Slot.Quantity += ToAdd;
-				Quantity -= ToAdd;
-
-				if (Quantity <= 0)
-				{
-					OnRep_Inventory();
-					return true;
-				}
-				else
-				{
-					OnRep_Inventory();
-					return false;
-				}
-			}
-			else
-			{
-				return false;
-			}
+			Items.Add(Item);
+			UE_LOG(LogTemp, Warning, TEXT("Item Added"));
+			return true;
 		}
-	}
-
-	if (Quantity > 0)
-	{
-		FInventorySlot NewSlot;
-		NewSlot.Item = Item;
-		NewSlot.Quantity = FMath::Min(Item->MaxQuantity, Quantity);
-		Inventory.Add(NewSlot);
-		Quantity -= NewSlot.Quantity;
-
-		OnRep_Inventory();
-		return Quantity <= 0;
+		UE_LOG(LogTemp, Error, TEXT("Not enough space"));
 	}
 
 	return false;
 }
 
-bool UInventoryComponent::RemoveItemInternal(AMainItemActor* Item, int32 Quantity)
+bool UInventoryComponent::RemoveItemInternal(AMainItemActor* Item)
 {
-	if (!Item || Quantity <= 0)
-	{
-		return false;
-	}
-
-	for (int32 i = Inventory.Num() - 1; i >= 0; --i)
-	{
-		FInventorySlot& Slot = Inventory[i];
-		if (Slot.Item == Item)
-		{
-			if (Slot.Quantity >= Quantity)
-			{
-				Slot.Quantity -= Quantity;
-
-				if (Slot.Quantity == 0)
-				{
-					Inventory.RemoveAt(i);
-				}
-
-				OnRep_Inventory();
-				return true;
-			}
-			else
-			{
-				return false;
-			}
-		}
-	}
-
-	return false;
+	return Items.Remove(Item) > 0;
 }

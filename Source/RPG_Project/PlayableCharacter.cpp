@@ -258,6 +258,7 @@ void APlayableCharacter::Interact()
 			IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor);
 			if (Interactable)
 			{
+				UE_LOG(LogTemp, Warning, TEXT("CharacterInteract"));
 				Interactable->Interact(this);
 			}
 		}

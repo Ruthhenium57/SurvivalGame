@@ -5,5 +5,6 @@
 
 AItemCannedFoodActor::AItemCannedFoodActor()
 {
-	
+	ItemName = "Canned Food";
+	MaxStack = 3;
 }

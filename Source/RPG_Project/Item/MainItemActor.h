@@ -26,10 +26,10 @@ public:
 	USkeletalMeshComponent* SkeletalMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	FString Name;
+	FString ItemName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	int32 MaxQuantity;
+	int32 MaxStack;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	FString Description;

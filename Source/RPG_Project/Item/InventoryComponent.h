@@ -7,8 +7,8 @@
 #include "MainItemActor.h"
 #include "InventoryComponent.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnItemAdded, bool, bSuccess, AMainItemActor*, Item, int32, Quantity);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnItemRemoved, bool, bSuccess, AMainItemActor*, Item, int32, Quantity);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemAdded, bool, bSuccess, AMainItemActor*, Item);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemRemoved, bool, bSuccess, AMainItemActor*, Item);
 
 UCLASS( ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class RPG_PROJECT_API UInventoryComponent : public UActorComponent
@@ -26,20 +26,23 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "Inventory")
 	TArray<AMainItemActor*> Items;
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	bool AddItem(AMainItemActor* Item, int32 Quantity);
+	bool AddItem(AMainItemActor* Item);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	bool RemoveItem(AMainItemActor* Item, int32 Quantity);
+	bool RemoveItem(AMainItemActor* Item);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	bool HasItem(AMainItemActor* Item, int32 Quantity) const;
+	bool HasItem(AMainItemActor* Item) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void LogInventory() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void LogInventoryByClass(AMainItemActor* ItemClass) const;
 
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnItemAdded OnItemAdded;
@@ -47,18 +50,21 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnItemRemoved OnItemRemoved;
 
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	TArray<AMainItemActor*> FindAllItemsByClass(AMainItemActor* ItemClass) const;
+
 private:
 	UFUNCTION()
 	void OnRep_Inventory();
 
 private:
 	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerAddItem(AMainItemActor* Item, int32 Quantity);
+	void ServerAddItem(AMainItemActor* Item);
 
 	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerRemoveItem(AMainItemActor* Item, int32 Quantity);
+	void ServerRemoveItem(AMainItemActor* Item);
 
-	bool AddItemInternal(AMainItemActor* Item, int32 Quantity);
+	bool AddItemInternal(AMainItemActor* Item);
 
-	bool RemoveItemInternal(AMainItemActor* Item, int32 Quantity);
+	bool RemoveItemInternal(AMainItemActor* Item);
 };

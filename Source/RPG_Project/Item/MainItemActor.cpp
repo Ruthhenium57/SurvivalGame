@@ -4,6 +4,7 @@
 #include "MainItemActor.h"
 #include "Components/SceneComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "../PlayableCharacter.h"
 
 // Sets default values
 AMainItemActor::AMainItemActor()
@@ -57,20 +58,17 @@ void AMainItemActor::HandleInteract(ACharacter* Character)
 	UE_LOG(LogTemp, Warning, TEXT("AMainItemActor::Interact called by %s"), *Character->GetName());
 	if (Character)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Item Interacted"));
 		APlayableCharacter* PlayableCharacter = Cast<APlayableCharacter>(Character);
 		if (PlayableCharacter)
 		{
-			if (PlayableCharacter->InventoryComponent->AddItem(this, 1))
+			if (PlayableCharacter->InventoryComponent->AddItem(this))
 			{
 				FVector NewLocation(9999, 9999, 9999);
 				SetActorLocation(NewLocation);
 				SetActorHiddenInGame(true);
-			}
-			else
-			{
-				UE_LOG(LogTemp, Error, TEXT("Item Not Be Added"));
+				return;
 			}
 		}
 	}
+	UE_LOG(LogTemp, Error, TEXT("Item Not Be Added"));
 }
