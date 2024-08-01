@@ -76,14 +76,11 @@ bool UInventoryComponent::HasItem(UMainItem* Item, int32 Quantity) const
 
 void UInventoryComponent::LogInventory() const
 {
-	if (GetOwnerRole() == ROLE_Authority)
+	for (const FInventorySlot& Slot : Inventory)
 	{
-		for (const FInventorySlot& Slot : Inventory)
+		if (Slot.Item)
 		{
-			if (Slot.Item)
-			{
-				UE_LOG(LogTemp, Error, TEXT("Owner: %s, Item: %s, Quantity: %d"), *GetOwner()->GetName(), *Slot.Item->Name, Slot.Quantity);
-			}
+			UE_LOG(LogTemp, Error, TEXT("Owner: %s, Item: %s, Quantity: %d"), *GetOwner()->GetName(), *Slot.Item->GetName(), Slot.Quantity);
 		}
 	}
 }

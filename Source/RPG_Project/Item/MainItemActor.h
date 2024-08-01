@@ -14,22 +14,26 @@ class RPG_PROJECT_API AMainItemActor : public AActor, public IInteractableInterf
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
 	AMainItemActor();
 
 	virtual void Interact(ACharacter* Character) override;
+	 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerInteract(ACharacter* Character);
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-public:
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "Item")
 	UMainItem* ItemLogic;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh")
 	USkeletalMeshComponent* SkeletalMesh;
+
+protected:
+	virtual void BeginPlay() override;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+private:
+	void HandleInteract(ACharacter* Character);
 	};

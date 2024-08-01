@@ -255,13 +255,10 @@ void APlayableCharacter::Interact()
 		AActor* HitActor = HitResult.GetActor();
 		if (HitActor && HitActor->GetClass()->ImplementsInterface(UInteractableInterface::StaticClass()))
 		{
-			if (HasAuthority())
+			IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor);
+			if (Interactable)
 			{
-				ServerInteract(HitActor);
-			}
-			else
-			{
-				ServerInteract(HitActor);
+				Interactable->Interact(this);
 			}
 		}
 	}
@@ -271,11 +268,7 @@ void APlayableCharacter::ServerInteract_Implementation(AActor* HitActor)
 {
 	if (HitActor && HitActor->GetClass()->ImplementsInterface(UInteractableInterface::StaticClass()))
 	{
-		IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor);
-		if (Interactable)
-		{
-			Interactable->Interact(this);
-		}
+		
 	}
 }
 
