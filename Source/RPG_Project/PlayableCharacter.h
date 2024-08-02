@@ -9,6 +9,7 @@
 #include "Item/InventoryComponent.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "InteractableInterface.h"
 #include "PlayerStatsComp.h"
 #include "PlayableCharacter.generated.h"
 
@@ -39,7 +40,7 @@ private:
 	float SprintSpeed;
 	bool bIsSprinting;
 
-	bool PerformLineTrace(FHitResult& HitResult) const;
+	void PerformLineTrace(FHitResult& HitResult);
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
@@ -60,9 +61,6 @@ public:
 	void Look(float value);
 	void Turn(float value);
 	void Jump();
-	//void Debug1();
-	//void Debug2();
-	//void Debug3();
 	void StopJump();
 	UFUNCTION()
 	void OnStaminaEnd();
@@ -101,7 +99,11 @@ public:
 	float StaminaRegenDelay;
 	void BeginStaminaRegen();
 
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+	float InteractionDistance;
 	void Interact();
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerInteract(AActor* HitActor);
+
+	void TakeItemFromStorage();
 };

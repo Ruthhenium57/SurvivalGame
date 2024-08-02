@@ -15,6 +15,8 @@ class RPG_PROJECT_API AMainItemActor : public AActor, public IInteractableInterf
 public:
 	AMainItemActor();
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	virtual void Interact(ACharacter* Character) override;
 	 
 	UFUNCTION(Server, Reliable, WithValidation)
@@ -39,8 +41,6 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 private:
 	void HandleInteract(ACharacter* Character);

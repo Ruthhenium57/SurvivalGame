@@ -75,7 +75,7 @@ void UInventoryComponent::LogInventory() const
 void UInventoryComponent::LogInventoryByClass(AMainItemActor* ItemClass) const
 {
 	int32 Quantity = FindAllItemsByClass(ItemClass).Num();
-	UE_LOG(LogTemp, Warning, TEXT("Item: %s, Quantity: %d"), *ItemClass->ItemName, Quantity);
+	UE_LOG(LogTemp, Warning, TEXT("Owner: %s, Item: %s, Quantity: %d"), *GetOwner()->GetName(), *ItemClass->ItemName, Quantity);
 }
 
 TArray<AMainItemActor*> UInventoryComponent::FindAllItemsByClass(AMainItemActor* ItemClass) const
@@ -93,7 +93,7 @@ TArray<AMainItemActor*> UInventoryComponent::FindAllItemsByClass(AMainItemActor*
 
 void UInventoryComponent::OnRep_Inventory()
 {
-	LogInventory();
+	
 }
 
 void UInventoryComponent::ServerAddItem_Implementation(AMainItemActor* Item)
@@ -127,6 +127,7 @@ bool UInventoryComponent::AddItemInternal(AMainItemActor* Item)
 		{
 			Items.Add(Item);
 			UE_LOG(LogTemp, Warning, TEXT("Item Added"));
+			LogInventoryByClass(Item);
 			return true;
 		}
 		UE_LOG(LogTemp, Error, TEXT("Not enough space"));

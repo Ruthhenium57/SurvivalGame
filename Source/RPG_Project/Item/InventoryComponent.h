@@ -26,7 +26,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "Inventory")
+	UPROPERTY(ReplicatedUsing = OnRep_Inventory, EditAnywhere, BlueprintReadWrite, Replicated, Category = "Inventory")
 	TArray<AMainItemActor*> Items;
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")

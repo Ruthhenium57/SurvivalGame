@@ -26,4 +26,7 @@ public:
 
     UPROPERTY(meta = (BindWidget))
     class UHungerBarWidget* HungerBarWidget;
+
+    UPROPERTY(meta = (BindWidget))
+    class UInteractionInfoWidget* InteractionInfoWidget;
 };

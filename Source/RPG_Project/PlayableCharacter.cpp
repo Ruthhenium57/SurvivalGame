@@ -11,7 +11,6 @@
 #include "StaminaBarWidget.h"
 #include "HungerBarWidget.h"
 #include "ThirstBarWidget.h"
-#include "InteractableInterface.h"
 #include "GameHUD.h"
 #include "GameFramework/PlayerController.h"
 #include "Components/InputComponent.h"
@@ -34,6 +33,8 @@ APlayableCharacter::APlayableCharacter()
 
 	BaseTurnRate = 45.0f;
 	BaseLookUpRate = 45.0f;
+
+	InteractionDistance = 400.0f;
 }
 
 void APlayableCharacter::BeginPlay()
@@ -66,18 +67,15 @@ void APlayableCharacter::Tick(float DeltaTime)
 	UpdateHealthBar();
 	UpdateHungerBar();
 	UpdateThirstBar();
-}
 
-bool APlayableCharacter::PerformLineTrace(FHitResult& HitResult) const
-{
-	FVector Start = FirstPersonCamera->GetComponentLocation();
-	FVector ForwardVector = FirstPersonCamera->GetForwardVector();
-	FVector End = ((ForwardVector * 500) + Start);
-	FCollisionQueryParams CollisionParams;
-	CollisionParams.AddIgnoredActor(this);
+	//FVector Start = FirstPersonCamera->GetComponentLocation();
+	//FVector ForwardVector = FirstPersonCamera->GetForwardVector();
+	//FVector End = ((ForwardVector * InteractionDistance) + Start);
+	//FCollisionQueryParams CollisionParams;
+	//CollisionParams.AddIgnoredActor(this);
 
-	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2, 0, 1);
-	return GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, CollisionParams);
+	//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2, 0, 1);
+	//GetWorld()->LineTraceSingleByChannel(HitResultCache, Start, End, ECC_Visibility, CollisionParams);
 }
 
 void APlayableCharacter::SetupPlayerInputComponent(UInputComponent * MainPlayerInput)
@@ -99,9 +97,7 @@ void APlayableCharacter::SetupPlayerInputComponent(UInputComponent * MainPlayerI
 
 
 	MainPlayerInput->BindAction("Interact", IE_Pressed, this, &APlayableCharacter::Interact);
-	//MainPlayerInput->BindAction("DebugKey1", IE_Pressed, this, &APlayableCharacter::Debug1);
-	//MainPlayerInput->BindAction("DebugKey2", IE_Pressed, this, &APlayableCharacter::Debug2);
-	//MainPlayerInput->BindAction("DebugKey3", IE_Pressed, this, &APlayableCharacter::Debug3);
+	
 }
 
 void APlayableCharacter::MoveForward(float Value)
@@ -250,32 +246,49 @@ void APlayableCharacter::BeginStaminaRegen()
 void APlayableCharacter::Interact()
 {
 	FHitResult HitResult;
-	if (PerformLineTrace(HitResult))
+	PerformLineTrace(HitResult);
+
+	if (HitResult.GetActor() && HitResult.GetActor()->Implements<UInteractableInterface>())
 	{
-		AActor* HitActor = HitResult.GetActor();
-		if (HitActor && HitActor->GetClass()->ImplementsInterface(UInteractableInterface::StaticClass()))
+		if (HasAuthority())
 		{
-			IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor);
-			if (Interactable)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("CharacterInteract"));
-				Interactable->Interact(this);
-			}
+			ServerInteract(HitResult.GetActor());
+		}
+		else
+		{
+			ServerInteract(HitResult.GetActor());
 		}
 	}
 }
 
 void APlayableCharacter::ServerInteract_Implementation(AActor* HitActor)
 {
-	if (HitActor && HitActor->GetClass()->ImplementsInterface(UInteractableInterface::StaticClass()))
+	if (HitActor && HitActor->Implements<UInteractableInterface>())
 	{
-		
+		IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor);
+		if (Interactable)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("CharacterInteract"));
+			Interactable->Interact(this);
+		}
 	}
 }
 
 bool APlayableCharacter::ServerInteract_Validate(AActor* HitActor)
 {
 	return true;
+}
+
+void APlayableCharacter::PerformLineTrace(FHitResult& HitResult)
+{
+	FVector Start = FirstPersonCamera->GetComponentLocation();
+	FVector ForwardVector = FirstPersonCamera->GetForwardVector();
+	FVector End = ((ForwardVector * InteractionDistance) + Start);
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(this);
+
+	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2, 0, 1);
+	GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, CollisionParams);
 }
 
 void APlayableCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
