@@ -13,7 +13,6 @@ AMainItemActor::AMainItemActor()
 	RootComponent = SkeletalMesh;
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
-	SetReplicateMovement(true);
 }
 
 void AMainItemActor::Interact(ACharacter* Character)

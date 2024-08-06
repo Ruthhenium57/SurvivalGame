@@ -11,6 +11,7 @@
 #include "StaminaBarWidget.h"
 #include "HungerBarWidget.h"
 #include "ThirstBarWidget.h"
+#include "InteractionInfoWidget.h"
 #include "GameHUD.h"
 #include "GameFramework/PlayerController.h"
 #include "Components/InputComponent.h"
@@ -67,15 +68,7 @@ void APlayableCharacter::Tick(float DeltaTime)
 	UpdateHealthBar();
 	UpdateHungerBar();
 	UpdateThirstBar();
-
-	//FVector Start = FirstPersonCamera->GetComponentLocation();
-	//FVector ForwardVector = FirstPersonCamera->GetForwardVector();
-	//FVector End = ((ForwardVector * InteractionDistance) + Start);
-	//FCollisionQueryParams CollisionParams;
-	//CollisionParams.AddIgnoredActor(this);
-
-	//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2, 0, 1);
-	//GetWorld()->LineTraceSingleByChannel(HitResultCache, Start, End, ECC_Visibility, CollisionParams);
+	UpdateInteractInfo();
 }
 
 void APlayableCharacter::SetupPlayerInputComponent(UInputComponent * MainPlayerInput)
@@ -97,7 +90,7 @@ void APlayableCharacter::SetupPlayerInputComponent(UInputComponent * MainPlayerI
 
 
 	MainPlayerInput->BindAction("Interact", IE_Pressed, this, &APlayableCharacter::Interact);
-	
+	MainPlayerInput->BindAction("PutItemToStorage", IE_Pressed, this, &APlayableCharacter::PutItemToStorage);
 }
 
 void APlayableCharacter::MoveForward(float Value)
@@ -238,6 +231,31 @@ void APlayableCharacter::UpdateHungerBar()
 	}
 }
 
+void APlayableCharacter::UpdateInteractInfo()
+{
+	if (MainHUDWidget)
+	{
+		FHitResult HitResult;
+		PerformLineTrace(HitResult);
+		AActor* HitActor = HitResult.GetActor();
+		if (HitActor && HitActor->GetClass()->ImplementsInterface(UInteractableInterface::StaticClass()))
+		{
+			IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor);
+			if (Interactable)
+			{
+				MainHUDWidget->InteractionInfoWidget->ShowInteractInfo(Interactable->InteractTextBlockName);
+				if (!Interactable->InteractTextBlockName2.IsEmpty())
+				{
+					MainHUDWidget->InteractionInfoWidget->ShowInteractInfo(Interactable->InteractTextBlockName2);
+					return;
+				}
+				return;
+			}
+		}
+		MainHUDWidget->InteractionInfoWidget->HideInteractInfo();
+	}
+}
+
 void APlayableCharacter::BeginStaminaRegen()
 {
 	PlayerStatsComp->bCanStaminaRegen = true;
@@ -268,13 +286,49 @@ void APlayableCharacter::ServerInteract_Implementation(AActor* HitActor)
 		IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor);
 		if (Interactable)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("CharacterInteract"));
+			//UE_LOG(LogTemp, Warning, TEXT("CharacterInteract"));
 			Interactable->Interact(this);
 		}
 	}
 }
 
 bool APlayableCharacter::ServerInteract_Validate(AActor* HitActor)
+{
+	return true;
+}
+
+void APlayableCharacter::PutItemToStorage()
+{
+	FHitResult HitResult;
+	PerformLineTrace(HitResult);
+
+	if (HitResult.GetActor() && HitResult.GetActor()->Implements<UInteractableInterface>())
+	{
+		if (HasAuthority())
+		{
+			ServerPutItemToStorage(HitResult.GetActor());
+		}
+		else
+		{
+			ServerPutItemToStorage(HitResult.GetActor());
+		}
+	}
+}
+
+void APlayableCharacter::ServerPutItemToStorage_Implementation(AActor* HitActor)
+{
+	if (HitActor && HitActor->Implements<UInteractableInterface>())
+	{
+		IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor);
+		if (Interactable)
+		{
+			//UE_LOG(LogTemp, Warning, TEXT("CharacterTakeItem"));
+			Interactable->PutItemToStorage(this);
+		}
+	}
+}
+
+bool APlayableCharacter::ServerPutItemToStorage_Validate(AActor* HitActor)
 {
 	return true;
 }
@@ -287,7 +341,7 @@ void APlayableCharacter::PerformLineTrace(FHitResult& HitResult)
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(this);
 
-	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2, 0, 1);
+	//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2, 0, 1);
 	GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, CollisionParams);
 }
 

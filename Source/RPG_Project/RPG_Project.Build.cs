@@ -9,7 +9,7 @@ public class RPG_Project : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        PublicIncludePaths.AddRange(new string[] { Path.Combine(ModuleDirectory, "Item"), Path.Combine(ModuleDirectory, "UI") });
+        PublicIncludePaths.AddRange(new string[] { Path.Combine(ModuleDirectory, "Item"), Path.Combine(ModuleDirectory, "UI"), Path.Combine(ModuleDirectory, "Object") });
         PrivateIncludePaths.AddRange(new string[] {  });
 
         PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "UMG", "Slate", "SlateCore", "EnhancedInput" });

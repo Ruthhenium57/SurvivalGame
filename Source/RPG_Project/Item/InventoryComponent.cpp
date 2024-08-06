@@ -58,7 +58,7 @@ bool UInventoryComponent::RemoveItem(AMainItemActor* Item)
 
 bool UInventoryComponent::HasItem(AMainItemActor* Item) const
 {
-	return !FindAllItemsByClass(Item).IsEmpty();
+	return !FindAllItemsByClass(Item->GetClass()).IsEmpty();
 }
 
 void UInventoryComponent::LogInventory() const
@@ -72,23 +72,23 @@ void UInventoryComponent::LogInventory() const
 	}
 }
 
-void UInventoryComponent::LogInventoryByClass(AMainItemActor* ItemClass) const
+void UInventoryComponent::LogInventoryByClass(TSubclassOf<AMainItemActor> ItemClass) const
 {
 	int32 Quantity = FindAllItemsByClass(ItemClass).Num();
-	UE_LOG(LogTemp, Warning, TEXT("Owner: %s, Item: %s, Quantity: %d"), *GetOwner()->GetName(), *ItemClass->ItemName, Quantity);
+	UE_LOG(LogTemp, Warning, TEXT("Owner: %s, Item: %s, Quantity: %d"), *GetOwner()->GetName(), *ItemClass->GetName(), Quantity);
 }
 
-TArray<AMainItemActor*> UInventoryComponent::FindAllItemsByClass(AMainItemActor* ItemClass) const
+TArray<AMainItemActor*> UInventoryComponent::FindAllItemsByClass(TSubclassOf<AMainItemActor> ItemClass) const
 {
 	TArray<AMainItemActor*> FoudedItems;
 	for (AMainItemActor* Item : Items)
 	{
-		if (Item->GetClass() == ItemClass->GetClass())
+		if (Item->GetClass() == ItemClass)
 		{
 			FoudedItems.Add(Item);
 		}
 	}
-	return TArray<AMainItemActor*>(FoudedItems);
+	return FoudedItems;
 }
 
 void UInventoryComponent::OnRep_Inventory()
@@ -122,12 +122,12 @@ bool UInventoryComponent::AddItemInternal(AMainItemActor* Item)
 {
 	if (Item)
 	{
-		int32 TotalQuantity = FindAllItemsByClass(Item).Num();
-		if (FindAllItemsByClass(Item).Num() < Item->MaxStack)
+		int32 TotalQuantity = FindAllItemsByClass(Item->GetClass()).Num();
+		if (FindAllItemsByClass(Item->GetClass()).Num() < Item->MaxStack)
 		{
 			Items.Add(Item);
 			UE_LOG(LogTemp, Warning, TEXT("Item Added"));
-			LogInventoryByClass(Item);
+			LogInventoryByClass(Item->GetClass());
 			return true;
 		}
 		UE_LOG(LogTemp, Error, TEXT("Not enough space"));

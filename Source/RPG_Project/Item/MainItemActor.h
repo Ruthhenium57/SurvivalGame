@@ -18,7 +18,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual void Interact(ACharacter* Character) override;
-	 
+	
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerInteract(ACharacter* Character);
 
@@ -43,5 +43,5 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	void HandleInteract(ACharacter* Character);
+	virtual void HandleInteract(ACharacter* Character);
 	};

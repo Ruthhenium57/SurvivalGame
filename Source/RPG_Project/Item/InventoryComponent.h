@@ -42,7 +42,7 @@ public:
 	void LogInventory() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void LogInventoryByClass(AMainItemActor* ItemClass) const;
+	void LogInventoryByClass(TSubclassOf<AMainItemActor> ItemClass) const;
 
 	UPROPERTY(BlueprintAssignable, Category = "Inventory")
 	FOnItemAdded OnItemAdded;
@@ -51,7 +51,7 @@ public:
 	FOnItemRemoved OnItemRemoved;
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	TArray<AMainItemActor*> FindAllItemsByClass(AMainItemActor* ItemClass) const;
+	TArray<AMainItemActor*> FindAllItemsByClass(TSubclassOf<AMainItemActor> ItemClass) const;
 
 private:
 	UFUNCTION()

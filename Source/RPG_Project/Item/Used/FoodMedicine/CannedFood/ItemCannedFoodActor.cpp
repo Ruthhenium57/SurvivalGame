@@ -7,4 +7,5 @@ AItemCannedFoodActor::AItemCannedFoodActor()
 {
 	ItemName = "Canned Food";
 	MaxStack = 3;
+	InteractTextBlockName = "Take";
 }

@@ -8,7 +8,7 @@
 
 AGameHUD::AGameHUD()
 {
-	static ConstructorHelpers::FClassFinder<UMainHUDWidget> WidgetClass(TEXT("/Game/UI/MainHUDWidget"));
+	static ConstructorHelpers::FClassFinder<UMainHUDWidget> WidgetClass(TEXT("/Game/UI/HUD/MainHUDWidget"));
 	if (WidgetClass.Succeeded())
 	{
 		MainHUDWidgetClass = WidgetClass.Class;

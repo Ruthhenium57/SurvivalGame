@@ -23,4 +23,7 @@ class RPG_PROJECT_API IInteractableInterface
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	virtual void Interact(ACharacter* Character) = 0;
+	virtual void PutItemToStorage(ACharacter* Character) {};
+	FString InteractTextBlockName = TEXT("");
+	FString InteractTextBlockName2 = TEXT("");
 };

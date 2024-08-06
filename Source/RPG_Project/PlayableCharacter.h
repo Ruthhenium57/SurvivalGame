@@ -91,6 +91,8 @@ public:
 	void UpdateThirstBar();
 	UFUNCTION()
 	void UpdateHungerBar();
+	UFUNCTION()
+	void UpdateInteractInfo();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
 	float NeedStaminaToJump;
@@ -105,5 +107,7 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerInteract(AActor* HitActor);
 
-	void TakeItemFromStorage();
+	void PutItemToStorage();
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerPutItemToStorage(AActor* HitActor);
 };
