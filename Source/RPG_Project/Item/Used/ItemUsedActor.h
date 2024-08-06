@@ -19,7 +19,7 @@ public:
 	
 	virtual void Tick(float DeltaTime) override;
 
-	void Use();
+	virtual void Use();
 
 protected:
 	virtual void BeginPlay() override;

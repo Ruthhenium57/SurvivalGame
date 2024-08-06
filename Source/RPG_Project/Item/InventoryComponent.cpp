@@ -98,8 +98,8 @@ void UInventoryComponent::OnRep_Inventory()
 
 void UInventoryComponent::ServerAddItem_Implementation(AMainItemActor* Item)
 {
-	//OnItemAdded.Broadcast(AddItemInternal(Item), Item);
-	AddItemInternal(Item);
+	OnItemAdded.Broadcast(AddItemInternal(Item), Item);
+	//AddItemInternal(Item);
 }
 
 bool UInventoryComponent::ServerAddItem_Validate(AMainItemActor* Item)
@@ -109,8 +109,8 @@ bool UInventoryComponent::ServerAddItem_Validate(AMainItemActor* Item)
 
 void UInventoryComponent::ServerRemoveItem_Implementation(AMainItemActor* Item)
 {
-	//OnItemRemoved.Broadcast(RemoveItemInternal(Item), Item);
-	RemoveItemInternal(Item);
+	OnItemRemoved.Broadcast(RemoveItemInternal(Item), Item);
+	//RemoveItemInternal(Item);
 }
 
 bool UInventoryComponent::ServerRemoveItem_Validate(AMainItemActor* Item)

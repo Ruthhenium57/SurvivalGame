@@ -13,10 +13,12 @@
 #include "ThirstBarWidget.h"
 #include "InteractionInfoWidget.h"
 #include "GameHUD.h"
+#include "InvenroryWidget.h"
 #include "GameFramework/PlayerController.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "TimerManager.h"
+#include "Item/Used/FoodMedicine/CannedFood/ItemCannedFoodActor.h"
 
 APlayableCharacter::APlayableCharacter()
 {
@@ -57,6 +59,12 @@ void APlayableCharacter::BeginPlay()
 	if (PlayerStatsComp)
 	{
 		PlayerStatsComp->OnStaminaEnd.AddDynamic(this, &APlayableCharacter::OnStaminaEnd);
+	}
+
+	if (InventoryComponent)
+	{
+		InventoryComponent->OnItemAdded.AddDynamic(this, &APlayableCharacter::OnItemAdded);
+		InventoryComponent->OnItemRemoved.AddDynamic(this, &APlayableCharacter::OnItemRemoved);
 	}
 }
 
@@ -312,6 +320,22 @@ void APlayableCharacter::PutItemToStorage()
 		{
 			ServerPutItemToStorage(HitResult.GetActor());
 		}
+	}
+}
+
+void APlayableCharacter::OnItemAdded(bool bSuccess, AMainItemActor* Item)
+{
+	if (bSuccess && Item)
+	{
+		MainHUDWidget->InventoryWidget->AddItemToList(Item);
+	}
+}
+
+void APlayableCharacter::OnItemRemoved(bool bSuccess, AMainItemActor* Item)
+{
+	if (bSuccess && Item)
+	{
+		MainHUDWidget->InventoryWidget->AddItemToList(Item);
 	}
 }
 

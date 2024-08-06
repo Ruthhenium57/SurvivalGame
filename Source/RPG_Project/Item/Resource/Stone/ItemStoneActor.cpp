@@ -3,3 +3,9 @@
 
 #include "ItemStoneActor.h"
 
+AItemStoneActor::AItemStoneActor()
+{
+	ItemName = "Stone";
+	MaxStack = 2;
+	InteractTextBlockName = "Take";
+}

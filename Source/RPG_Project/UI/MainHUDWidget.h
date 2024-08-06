@@ -29,4 +29,7 @@ public:
 
     UPROPERTY(meta = (BindWidget))
     class UInteractionInfoWidget* InteractionInfoWidget;
+
+    UPROPERTY(meta = (BindWidget))
+    class UInvenroryWidget* InventoryWidget;
 };

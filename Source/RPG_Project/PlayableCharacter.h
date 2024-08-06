@@ -15,6 +15,7 @@
 
 class UMainHUDWidget;
 class UPlayerStatsComp;
+class UInventoryComponent;
 
 UCLASS()
 class RPG_PROJECT_API APlayableCharacter : public AMainCharacter
@@ -30,9 +31,6 @@ protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 private:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	UPlayerStatsComp* PlayerStatsComp;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HUD", meta = (AllowPrivateAccess = "true"))
 	UMainHUDWidget* MainHUDWidget;
 
@@ -45,6 +43,9 @@ private:
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
 	class UCameraComponent* FirstPersonCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UPlayerStatsComp* PlayerStatsComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UInventoryComponent* InventoryComponent;
@@ -110,4 +111,10 @@ public:
 	void PutItemToStorage();
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerPutItemToStorage(AActor* HitActor);
+
+	UFUNCTION()
+	void OnItemAdded(bool bSuccess, AMainItemActor* Item);
+
+	UFUNCTION()
+	void OnItemRemoved(bool bSuccess, AMainItemActor* Item);
 };

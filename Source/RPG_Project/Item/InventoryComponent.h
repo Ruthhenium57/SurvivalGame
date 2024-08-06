@@ -7,8 +7,8 @@
 #include "MainItemActor.h"
 #include "InventoryComponent.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemAdded, bool, bSuccess, AMainItemActor*, Item);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemRemoved, bool, bSuccess, AMainItemActor*, Item);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemAddedDelegate, bool, bSuccess, AMainItemActor*, Item);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemRemovedDelegate, bool, bSuccess, AMainItemActor*, Item);
 
 UCLASS( ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class RPG_PROJECT_API UInventoryComponent : public UActorComponent
@@ -44,11 +44,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void LogInventoryByClass(TSubclassOf<AMainItemActor> ItemClass) const;
 
-	UPROPERTY(BlueprintAssignable, Category = "Inventory")
-	FOnItemAdded OnItemAdded;
+	UPROPERTY(BlueprintAssignable, Category = "Event")
+	FOnItemAddedDelegate OnItemAdded;
 
-	UPROPERTY(BlueprintAssignable, Category = "Inventory")
-	FOnItemRemoved OnItemRemoved;
+	UPROPERTY(BlueprintAssignable, Category = "Event")
+	FOnItemRemovedDelegate OnItemRemoved;
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	TArray<AMainItemActor*> FindAllItemsByClass(TSubclassOf<AMainItemActor> ItemClass) const;

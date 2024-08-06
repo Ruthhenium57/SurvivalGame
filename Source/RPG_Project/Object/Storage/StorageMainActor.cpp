@@ -25,6 +25,7 @@ void AStorageMainActor::HandleInteract(ACharacter* Character)
 				{
 					PlayableCharacter->InventoryComponent->Items.Add(Item);
 					InventoryComponent->RemoveItem(Item);
+					Item->SetOwner(PlayableCharacter);
 				}
 			}
 		}
@@ -56,6 +57,7 @@ void AStorageMainActor::HandlePutItemToStorage(ACharacter* Character)
 				{
 					InventoryComponent->AddItem(Item);
 					PlayableCharacter->InventoryComponent->Items.Remove(Item);
+					Item->SetOwner(this);
 				}
 			}
 		}

@@ -17,5 +17,14 @@ class RPG_PROJECT_API AItemFoodMedicineActor : public AItemUsedActor
 public:
 	AItemFoodMedicineActor();
 
-	void CallUse();
+	void Use() override;
+
+	void ChangeStats();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	float ChangeHealth;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	float ChangeHunger;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	float ChangeThirst;
 };

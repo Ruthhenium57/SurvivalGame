@@ -14,4 +14,6 @@ class RPG_PROJECT_API AItemStoneActor : public AResourceItemActor
 {
 	GENERATED_BODY()
 	
+public:
+	AItemStoneActor();
 };

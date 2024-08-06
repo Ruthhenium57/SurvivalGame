@@ -67,6 +67,7 @@ void AMainItemActor::HandleInteract(ACharacter* Character)
 				SetActorLocation(NewLocation);
 				SetActorHiddenInGame(true);
 				SetActorEnableCollision(false);
+				SetOwner(PlayableCharacter);
 				return;
 			}
 		}

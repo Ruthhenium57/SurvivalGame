@@ -14,5 +14,8 @@ class RPG_PROJECT_API AItemCannedFoodActor : public AItemFoodMedicineActor
 {
 	GENERATED_BODY()
 	
+public:
 	AItemCannedFoodActor();
+
+	void Use();
 };
