@@ -34,11 +34,14 @@ bool UInventoryComponent::AddItem(AMainItemActor* Item)
 {
 	if (GetOwnerRole() == ROLE_Authority)
 	{
-		return AddItemInternal(Item);
+		bool B = AddItemInternal(Item);
+		OnItemAdded.Broadcast(B, Item);
+		return B;
 	}
 	else
 	{
 		ServerAddItem(Item);
+		UE_LOG(LogTemp, Display, TEXT("Server logiccccccc"));
 		return false;
 	}
 }
@@ -99,7 +102,7 @@ void UInventoryComponent::OnRep_Inventory()
 void UInventoryComponent::ServerAddItem_Implementation(AMainItemActor* Item)
 {
 	OnItemAdded.Broadcast(AddItemInternal(Item), Item);
-	//AddItemInternal(Item);
+	UE_LOG(LogTemp, Warning, TEXT("ServerAddItemIsCalled"));
 }
 
 bool UInventoryComponent::ServerAddItem_Validate(AMainItemActor* Item)
@@ -110,7 +113,6 @@ bool UInventoryComponent::ServerAddItem_Validate(AMainItemActor* Item)
 void UInventoryComponent::ServerRemoveItem_Implementation(AMainItemActor* Item)
 {
 	OnItemRemoved.Broadcast(RemoveItemInternal(Item), Item);
-	//RemoveItemInternal(Item);
 }
 
 bool UInventoryComponent::ServerRemoveItem_Validate(AMainItemActor* Item)
@@ -126,7 +128,6 @@ bool UInventoryComponent::AddItemInternal(AMainItemActor* Item)
 		if (FindAllItemsByClass(Item->GetClass()).Num() < Item->MaxStack)
 		{
 			Items.Add(Item);
-			UE_LOG(LogTemp, Warning, TEXT("Item Added"));
 			LogInventoryByClass(Item->GetClass());
 			return true;
 		}

@@ -27,6 +27,7 @@ APlayableCharacter::APlayableCharacter()
 
 	PlayerStatsComp = CreateDefaultSubobject<UPlayerStatsComp>(TEXT("PlayerStatsComp"));
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
+	InventoryComponent->SetIsReplicated(true);
 
 	DefaultWalkSpeed = 600.0f;
 	SprintSpeed = 1200.0f;
@@ -325,6 +326,7 @@ void APlayableCharacter::PutItemToStorage()
 
 void APlayableCharacter::OnItemAdded(bool bSuccess, AMainItemActor* Item)
 {
+	UE_LOG(LogTemp, Warning, TEXT("OnItemIsAddedIsCalled"));
 	if (bSuccess && Item)
 	{
 		MainHUDWidget->InventoryWidget->AddItemToList(Item);

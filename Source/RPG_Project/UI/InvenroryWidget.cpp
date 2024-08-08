@@ -12,6 +12,7 @@ void UInvenroryWidget::SetInventory(TArray<AMainItemActor*> Items)
 
 void UInvenroryWidget::AddItemToList(AMainItemActor* Item)
 {
+    UE_LOG(LogTemp, Warning, TEXT("AddItemToListIsCalled"));
     UTextBlock* TextBlock = NewObject<UTextBlock>(InventoryList);
     if (TextBlock)
     {
