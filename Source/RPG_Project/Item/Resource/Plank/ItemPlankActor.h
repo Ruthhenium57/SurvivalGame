@@ -4,18 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "../ResourceItemActor.h"
-#include "ItemPlank.h"
 #include "ItemPlankActor.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class RPG_PROJECT_API AItemPlankActor : public AActor
+class RPG_PROJECT_API AItemPlankActor : public AResourceItemActor
 {
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mesh")
-	UStaticMeshComponent* Mesh;
+	AItemPlankActor();
 };

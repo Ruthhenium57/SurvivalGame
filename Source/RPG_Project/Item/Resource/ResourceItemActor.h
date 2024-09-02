@@ -14,4 +14,6 @@ class RPG_PROJECT_API AResourceItemActor : public AMainItemActor
 {
 	GENERATED_BODY()
 	
+public:
+	AResourceItemActor();
 };

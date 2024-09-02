@@ -32,16 +32,17 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
 bool UInventoryComponent::AddItem(AMainItemActor* Item)
 {
-	if (GetOwnerRole() == ROLE_Authority)
-	{
-		bool B = AddItemInternal(Item);
-		OnItemAdded.Broadcast(B, Item);
-		return B;
+	if (GetOwner()->HasAuthority())
+	{	
+		UE_LOG(LogTemp, Display, TEXT("AddItem called on server"));
+		return AddItemInternal(Item);
 	}
 	else
 	{
+		UE_LOG(LogTemp, Display, TEXT("AddItem called on client"));
 		ServerAddItem(Item);
-		UE_LOG(LogTemp, Display, TEXT("Server logiccccccc"));
+		UE_LOG(LogTemp, Display, TEXT("Server logic"));
+		OnItemAdded.Broadcast(true, Item);
 		return false;
 	}
 }
@@ -96,7 +97,7 @@ TArray<AMainItemActor*> UInventoryComponent::FindAllItemsByClass(TSubclassOf<AMa
 
 void UInventoryComponent::OnRep_Inventory()
 {
-	
+	//LogInventory();
 }
 
 void UInventoryComponent::ServerAddItem_Implementation(AMainItemActor* Item)
@@ -124,16 +125,13 @@ bool UInventoryComponent::AddItemInternal(AMainItemActor* Item)
 {
 	if (Item)
 	{
-		int32 TotalQuantity = FindAllItemsByClass(Item->GetClass()).Num();
 		if (FindAllItemsByClass(Item->GetClass()).Num() < Item->MaxStack)
 		{
 			Items.Add(Item);
-			LogInventoryByClass(Item->GetClass());
 			return true;
 		}
 		UE_LOG(LogTemp, Error, TEXT("Not enough space"));
 	}
-
 	return false;
 }
 

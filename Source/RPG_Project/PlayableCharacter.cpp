@@ -277,13 +277,15 @@ void APlayableCharacter::Interact()
 
 	if (HitResult.GetActor() && HitResult.GetActor()->Implements<UInteractableInterface>())
 	{
-		if (HasAuthority())
+		if (!HasAuthority())
 		{
 			ServerInteract(HitResult.GetActor());
+			UE_LOG(LogTemp, Warning, TEXT("Running on Client"));
 		}
 		else
 		{
-			ServerInteract(HitResult.GetActor());
+			ServerInteract_Implementation(HitResult.GetActor());
+			UE_LOG(LogTemp, Warning, TEXT("Running on Server"));
 		}
 	}
 }
@@ -295,7 +297,7 @@ void APlayableCharacter::ServerInteract_Implementation(AActor* HitActor)
 		IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor);
 		if (Interactable)
 		{
-			//UE_LOG(LogTemp, Warning, TEXT("CharacterInteract"));
+			UE_LOG(LogTemp, Warning, TEXT("InteractItemName: %s"), *HitActor->GetClass()->GetName().RightChop(7).LeftChop(2))
 			Interactable->Interact(this);
 		}
 	}

@@ -3,3 +3,7 @@
 
 #include "ResourceItemActor.h"
 
+AResourceItemActor::AResourceItemActor()
+{
+	
+}

@@ -2,5 +2,9 @@
 
 
 #include "ItemPlankActor.h"
-#include "Components/StaticMeshComponent.h"
 
+AItemPlankActor::AItemPlankActor()
+{
+	ItemName = "Plank";
+	MaxStack = 3;
+}

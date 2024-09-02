@@ -19,10 +19,12 @@ void AMainItemActor::Interact(ACharacter* Character)
 {
 	if (HasAuthority())
 	{
+		//UE_LOG(LogTemp, Display, TEXT("Running on Server"));
 		HandleInteract(Character);
 	}
 	else
 	{
+		//UE_LOG(LogTemp, Display, TEXT("Running on Client"));
 		ServerInteract(Character);
 	}
 }
@@ -40,6 +42,20 @@ bool AMainItemActor::ServerInteract_Validate(ACharacter* Character)
 void AMainItemActor::BeginPlay()
 {
 	Super::BeginPlay();
+	UDataTable* ItemDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Data/DT_ItemData.DT_ItemData"));
+	UE_LOG(LogTemp, Display, TEXT("Huechek"));
+	if (ItemDataTable)
+	{
+		FString ContextString = "";
+		FName RowName = FName(TEXT("Stone"));
+		FItemData* ItemData = ItemDataTable->FindRow<FItemData>(RowName, ContextString);
+		if (ItemData)
+		{
+			InteractTextBlockName = ItemData->InteractTextBlockName;
+			InteractTextBlockName2 = ItemData->InteractTextBlockName2;
+			UE_LOG(LogTemp, Display, TEXT("Hui"));
+		}
+	}//GetClass()->GetName().RightChop(7).LeftChop(2)
 }
 
 // Called every frame
@@ -55,7 +71,7 @@ void AMainItemActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 void AMainItemActor::HandleInteract(ACharacter* Character)
 {
-	UE_LOG(LogTemp, Warning, TEXT("AMainItemActor::Interact called by %s"), *Character->GetName());
+	//UE_LOG(LogTemp, Warning, TEXT("AMainItemActor::Interact called by %s"), *Character->GetName());
 	if (Character)
 	{
 		APlayableCharacter* PlayableCharacter = Cast<APlayableCharacter>(Character);
