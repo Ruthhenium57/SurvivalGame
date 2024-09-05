@@ -5,7 +5,5 @@
 
 AItemNailsActor::AItemNailsActor()
 {
-	ItemName = "Nails";
-	MaxStack = 2;
-	InteractTextBlockName = "Take";
+	
 }

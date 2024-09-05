@@ -5,7 +5,5 @@
 
 AItemGearsActor::AItemGearsActor()
 {
-	ItemName = "Gears";
-	MaxStack = 2;
-	InteractTextBlockName = "Take";
+	
 }

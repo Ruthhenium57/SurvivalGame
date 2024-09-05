@@ -5,7 +5,5 @@
 
 AItemRopeActor::AItemRopeActor()
 {
-	ItemName = "Rope";
-	MaxStack = 2;
-	InteractTextBlockName = "Take";
+	
 }

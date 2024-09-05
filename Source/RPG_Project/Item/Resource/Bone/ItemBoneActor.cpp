@@ -5,7 +5,5 @@
 
 AItemBoneActor::AItemBoneActor()
 {
-	ItemName = "Bone";
-	MaxStack = 2;
-	InteractTextBlockName = "Take";
+	
 }

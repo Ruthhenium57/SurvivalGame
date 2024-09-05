@@ -16,6 +16,9 @@ public:
 	FString ItemName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString ItemDescription;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 MaxQuantity;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

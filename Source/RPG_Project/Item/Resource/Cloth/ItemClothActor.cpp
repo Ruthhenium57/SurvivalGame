@@ -5,7 +5,5 @@
 
 AItemClothActor::AItemClothActor()
 {
-	ItemName = "Cloth";
-	MaxStack = 3;
-	InteractTextBlockName = "Take";
+	
 }

@@ -5,6 +5,5 @@
 
 AItemPlankActor::AItemPlankActor()
 {
-	ItemName = "Plank";
-	MaxStack = 3;
+	
 }

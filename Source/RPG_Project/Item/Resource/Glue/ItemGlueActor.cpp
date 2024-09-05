@@ -5,7 +5,5 @@
 
 AItemGlueActor::AItemGlueActor()
 {
-	ItemName = "Glue";
-	MaxStack = 2;
-	InteractTextBlockName = "Take";
+	
 }

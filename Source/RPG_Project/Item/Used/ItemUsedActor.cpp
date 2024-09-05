@@ -20,5 +20,5 @@ void AItemUsedActor::Use()
 
 void AItemUsedActor::BeginPlay()
 {
-
+	Super::BeginPlay();
 }

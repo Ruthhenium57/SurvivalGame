@@ -5,7 +5,5 @@
 
 AItemStickActor::AItemStickActor()
 {
-	ItemName = "Stick";
-	MaxStack = 2;
-	InteractTextBlockName = "Take";
+	
 }

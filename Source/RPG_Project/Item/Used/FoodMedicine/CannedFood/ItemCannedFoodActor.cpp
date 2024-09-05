@@ -5,9 +5,6 @@
 
 AItemCannedFoodActor::AItemCannedFoodActor()
 {
-	ItemName = "Canned Food";
-	MaxStack = 3;
-	InteractTextBlockName = "Take";
 	ChangeHunger = 15;
 	ChangeThirst = 5;
 	ChangeHealth = 5;

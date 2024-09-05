@@ -42,20 +42,23 @@ bool AMainItemActor::ServerInteract_Validate(ACharacter* Character)
 void AMainItemActor::BeginPlay()
 {
 	Super::BeginPlay();
-	UDataTable* ItemDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Data/DT_ItemData.DT_ItemData"));
-	UE_LOG(LogTemp, Display, TEXT("Huechek"));
+	UDataTable* ItemDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Data/DT_Item.DT_Item"));
 	if (ItemDataTable)
 	{
 		FString ContextString = "";
-		FName RowName = FName(TEXT("Stone"));
+		FName RowName = FName(GetClass()->GetName().RightChop(7).LeftChop(2));
+		UE_LOG(LogTemp, Display, TEXT("Item: %s"), *GetClass()->GetName().RightChop(7).LeftChop(2));
 		FItemData* ItemData = ItemDataTable->FindRow<FItemData>(RowName, ContextString);
 		if (ItemData)
 		{
 			InteractTextBlockName = ItemData->InteractTextBlockName;
 			InteractTextBlockName2 = ItemData->InteractTextBlockName2;
-			UE_LOG(LogTemp, Display, TEXT("Hui"));
+			MaxStack = ItemData->MaxQuantity;
+			ItemName = ItemData->ItemName;
+			Description = ItemData->ItemDescription;
+			Icon = ItemData->ItemImage;
 		}
-	}//GetClass()->GetName().RightChop(7).LeftChop(2)
+	}//
 }
 
 // Called every frame
