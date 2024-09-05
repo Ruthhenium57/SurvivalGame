@@ -82,11 +82,11 @@ void AMainItemActor::HandleInteract(ACharacter* Character)
 		{
 			if (PlayableCharacter->InventoryComponent->AddItem(this))
 			{
+				SetOwner(PlayableCharacter);
 				FVector NewLocation(9999, 9999, 9999);
 				SetActorLocation(NewLocation);
 				SetActorHiddenInGame(true);
 				SetActorEnableCollision(false);
-				SetOwner(PlayableCharacter);
 				return;
 			}
 		}
