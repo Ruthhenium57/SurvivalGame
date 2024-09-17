@@ -40,6 +40,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	UTexture2D* Icon;
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastHideItem();
+
 protected:
 	virtual void BeginPlay() override;
 

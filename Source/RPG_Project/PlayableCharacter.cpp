@@ -12,6 +12,7 @@
 #include "HungerBarWidget.h"
 #include "ThirstBarWidget.h"
 #include "InteractionInfoWidget.h"
+#include "InvenroryWidget.h"
 #include "GameHUD.h"
 #include "InvenroryWidget.h"
 #include "GameFramework/PlayerController.h"
@@ -39,6 +40,7 @@ APlayableCharacter::APlayableCharacter()
 	BaseLookUpRate = 45.0f;
 
 	InteractionDistance = 400.0f;
+	bIsInventoryHiden = true;
 }
 
 void APlayableCharacter::BeginPlay()
@@ -100,6 +102,8 @@ void APlayableCharacter::SetupPlayerInputComponent(UInputComponent * MainPlayerI
 
 	MainPlayerInput->BindAction("Interact", IE_Pressed, this, &APlayableCharacter::Interact);
 	MainPlayerInput->BindAction("PutItemToStorage", IE_Pressed, this, &APlayableCharacter::PutItemToStorage);
+
+	MainPlayerInput->BindAction("ToggleInventory", IE_Pressed, this, &APlayableCharacter::ToggleInventory);
 }
 
 void APlayableCharacter::MoveForward(float Value)
@@ -328,18 +332,40 @@ void APlayableCharacter::PutItemToStorage()
 
 void APlayableCharacter::OnItemAdded(bool bSuccess, AMainItemActor* Item)
 {
-	UE_LOG(LogTemp, Warning, TEXT("OnItemIsAddedIsCalled"));
-	if (bSuccess && Item)
-	{
-		MainHUDWidget->InventoryWidget->AddItemToList(Item);
-	}
+	//UE_LOG(LogTemp, Warning, TEXT("OnItemIsAddedIsCalled"));
+	//if (bSuccess && Item)
+	//{
+	//	MainHUDWidget->InventoryWidget->AddItemToList(Item);
+	//
 }
 
 void APlayableCharacter::OnItemRemoved(bool bSuccess, AMainItemActor* Item)
 {
-	if (bSuccess && Item)
+	//if (bSuccess && Item)
+	//{
+	//	MainHUDWidget->InventoryWidget->AddItemToList(Item);
+	//}
+}
+
+void APlayableCharacter::ToggleInventory()
+{
+	if (MainHUDWidget && MainHUDWidget->InventoryWidget)
 	{
-		MainHUDWidget->InventoryWidget->AddItemToList(Item);
+		if (bIsInventoryHiden)
+		{
+			MainHUDWidget->InventoryWidget->SetVisibility(ESlateVisibility::Visible);
+			bIsInventoryHiden = false;
+		}
+		else
+		{
+			MainHUDWidget->InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+			bIsInventoryHiden = true;
+		}
+		UE_LOG(LogTemp, Display, TEXT("Inventory toggle"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Display, TEXT("Inventory hasn't been spawned"));
 	}
 }
 

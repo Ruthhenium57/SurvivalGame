@@ -117,4 +117,9 @@ public:
 
 	UFUNCTION()
 	void OnItemRemoved(bool bSuccess, AMainItemActor* Item);
+
+	UFUNCTION()
+	void ToggleInventory();
+
+	bool bIsInventoryHiden;
 };

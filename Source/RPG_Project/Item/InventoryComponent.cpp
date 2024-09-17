@@ -33,15 +33,12 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 bool UInventoryComponent::AddItem(AMainItemActor* Item)
 {
 	if (GetOwner()->HasAuthority())
-	{	
-		UE_LOG(LogTemp, Display, TEXT("AddItem called on server"));
+	{
 		return AddItemInternal(Item);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Display, TEXT("AddItem called on client"));
 		ServerAddItem(Item);
-		UE_LOG(LogTemp, Display, TEXT("Server logic"));
 		OnItemAdded.Broadcast(true, Item);
 		return false;
 	}
@@ -125,12 +122,37 @@ bool UInventoryComponent::AddItemInternal(AMainItemActor* Item)
 {
 	if (Item)
 	{
-		if (FindAllItemsByClass(Item->GetClass()).Num() < Item->MaxStack)
+		if (ItemsSlots.IsEmpty())
 		{
-			Items.Add(Item);
-			return true;
+			for (FItemInventorySlot Slot : ItemsSlots)
+			{
+				if (Slot.ItemClass == Item->GetClass())
+				{
+					UDataTable* ItemDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Data/DT_Item.DT_Item"));
+					if (ItemDataTable)
+					{
+						FName RowName = FName(Item->GetClass()->GetName().RightChop(7).LeftChop(2));
+						FItemData* ItemData = ItemDataTable->FindRow<FItemData>(RowName, TEXT(""));
+						if (ItemData)
+						{
+							if (Slot.Quantity < ItemData->MaxQuantity)
+							{
+								Slot.Items.Add(Item);
+								Slot.Quantity = Slot.Quantity + 1;
+								UE_LOG(LogTemp, Display, TEXT("ItemAddedToOldSlot"));
+								return true;
+							}
+							else 
+							{
+								UE_LOG(LogTemp, Error, TEXT("Not enough space"));
+								return false;
+							}
+						}
+					}
+				}
+			}
 		}
-		UE_LOG(LogTemp, Error, TEXT("Not enough space"));
+		
 	}
 	return false;
 }

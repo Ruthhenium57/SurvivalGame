@@ -39,6 +39,14 @@ bool AMainItemActor::ServerInteract_Validate(ACharacter* Character)
 	return true;
 }
 
+void AMainItemActor::MulticastHideItem_Implementation()
+{
+	FVector NewLocation(9999, 9999, 9999);
+	SetActorLocation(NewLocation);
+	SetActorHiddenInGame(true);
+	SetActorEnableCollision(false);
+}
+
 void AMainItemActor::BeginPlay()
 {
 	Super::BeginPlay();
@@ -83,10 +91,7 @@ void AMainItemActor::HandleInteract(ACharacter* Character)
 			if (PlayableCharacter->InventoryComponent->AddItem(this))
 			{
 				SetOwner(PlayableCharacter);
-				FVector NewLocation(9999, 9999, 9999);
-				SetActorLocation(NewLocation);
-				SetActorHiddenInGame(true);
-				SetActorEnableCollision(false);
+				MulticastHideItem();
 				return;
 			}
 		}

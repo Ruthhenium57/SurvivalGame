@@ -7,7 +7,17 @@
 
 void UInvenroryWidget::SetInventory(TArray<AMainItemActor*> Items)
 {
-	
+    if (!Items.IsEmpty())
+    {
+        for (AMainItemActor* Item : Items)
+        {
+            Item->GetClass();
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Display, TEXT("Inventory is empty"));
+    }
 }
 
 void UInvenroryWidget::AddItemToList(AMainItemActor* Item)
