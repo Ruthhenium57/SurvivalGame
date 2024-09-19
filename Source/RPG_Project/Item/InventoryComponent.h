@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "MainItemActor.h"
+#include "../ItemDataManager.h"
 #include "InventoryComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemAddedDelegate, bool, bSuccess, AMainItemActor*, Item);
@@ -24,8 +25,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<AMainItemActor*> Items;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 Quantity;
+	bool operator==(const FItemInventorySlot& Slot) const
+	{
+		return ItemClass == Slot.ItemClass && Items == Slot.Items;
+	}
 };
 
 UCLASS( ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -43,9 +46,7 @@ protected:
 public:	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UPROPERTY(ReplicatedUsing = OnRep_Inventory, EditAnywhere, BlueprintReadWrite, Replicated, Category = "Inventory")
-	TArray<AMainItemActor*> Items;
-
+	UPROPERTY(EditAnywhere, )
 	UPROPERTY(ReplicatedUsing = OnRep_Inventory, EditAnywhere, BlueprintReadWrite, Replicated, Category = "Inventory")
 	TArray<FItemInventorySlot> ItemsSlots;
 

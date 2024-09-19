@@ -22,6 +22,9 @@ public:
 	int32 MaxQuantity;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 MaxQuantityWithPouch;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class AMainItemActor> ItemClass;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

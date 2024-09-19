@@ -3,13 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ItemData.h"
 #include "ItemDataManager.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class YOURGAME_API UItemDataManager : public UObject
+class RPG_PROJECT_API UItemDataManager : public UObject
 {
     GENERATED_BODY()
 

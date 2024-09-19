@@ -4,7 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "../Item/MainItemActor.h"
+#include "../Item/InventoryComponent.h"
+#include "ItemSlotWidget.h"
 #include "InvenroryWidget.generated.h"
 
 /**
@@ -17,15 +18,21 @@ class RPG_PROJECT_API UInvenroryWidget : public UUserWidget
 	
 public:
 	UFUNCTION(BlueprintCallable, Category = "UI")
-	void SetInventory(TArray<AMainItemActor*> Items);
+	void UpdateSlotInfo(FItemInventorySlot ItemSlot);
 
 	UFUNCTION(BlueprintCallable, Category = "UI")
-	void AddItemToList(AMainItemActor* Item);
+	void UpdateInventory(TArray<FItemInventorySlot> ItemSlots);
+
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void AddNewSlot(FItemInventorySlot ItemSlot);
+
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void RemoveSlot(FItemInventorySlot ItemSlot);
 
 protected:
 	UPROPERTY(meta = (BindWidget))
-	class UVerticalBox* InventoryList;
+	class UScrollBox* InventoryList;
 
-	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* Text;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UItemSlotWidget> ItemWidgetClass;
 };
