@@ -4,6 +4,7 @@
 #include "MainItemActor.h"
 #include "Components/SceneComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "../UI/MainHUDWidget.h"
 #include "../PlayableCharacter.h"
 
 // Sets default values

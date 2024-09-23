@@ -31,9 +31,6 @@ protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 private:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HUD", meta = (AllowPrivateAccess = "true"))
-	UMainHUDWidget* MainHUDWidget;
-
 	float DefaultWalkSpeed;
 	float SprintSpeed;
 	bool bIsSprinting;
@@ -41,6 +38,9 @@ private:
 	void PerformLineTrace(FHitResult& HitResult);
 
 public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HUD", meta = (AllowPrivateAccess = "true"))
+	UMainHUDWidget* MainHUDWidget;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
 	class UCameraComponent* FirstPersonCamera;
 

@@ -17,10 +17,13 @@ void UInvenroryWidget::UpdateSlotInfo(FItemInventorySlot ItemSlot)
 				if (ItemWidget)
 				{
 					ItemWidget->UpdateItemInfo(ItemSlot);
+					UE_LOG(LogTemp, Display, TEXT("Widget slot info updated"));
+					return;
 				}
 			}
 		}
 	}
+	AddNewSlot(ItemSlot);
 }
 
 void UInvenroryWidget::UpdateInventory(TArray<FItemInventorySlot> ItemSlots)
@@ -33,15 +36,16 @@ void UInvenroryWidget::AddNewSlot(FItemInventorySlot ItemSlot)
 	if (UItemSlotWidget* Widget = CreateWidget<UItemSlotWidget>(this, ItemWidgetClass, FName(ItemSlot.ItemClass->GetName())))
 	{
 		InventoryList->AddChild(Widget);
+		Widget->UpdateItemInfo(ItemSlot);
 		UE_LOG(LogTemp, Display, TEXT("SlotAddedToWidget"));
 	}
 }
 
-void UInvenroryWidget::RemoveSlot(FItemInventorySlot ItemSlot)
+void UInvenroryWidget::RemoveSlot(TSubclassOf<AMainItemActor> ItemClass)
 {
 	for (UWidget* Widget : InventoryList->GetAllChildren())
 	{
-		if (Widget->GetName() == ItemSlot.ItemClass->GetName())
+		if (Widget->GetName() == ItemClass->GetName())
 		{
 			InventoryList->RemoveChild(Widget);
 			UE_LOG(LogTemp, Display, TEXT("SlotRemovedFromWidget"));

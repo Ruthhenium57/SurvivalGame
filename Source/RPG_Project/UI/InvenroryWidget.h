@@ -27,7 +27,7 @@ public:
 	void AddNewSlot(FItemInventorySlot ItemSlot);
 
 	UFUNCTION(BlueprintCallable, Category = "UI")
-	void RemoveSlot(FItemInventorySlot ItemSlot);
+	void RemoveSlot(TSubclassOf<AMainItemActor> ItemClass);
 
 protected:
 	UPROPERTY(meta = (BindWidget))

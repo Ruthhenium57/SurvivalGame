@@ -4,6 +4,7 @@
 #include "InventoryComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
+#include "InvenroryWidget.h"
 
 UInventoryComponent::UInventoryComponent()
 {
@@ -21,7 +22,6 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(UInventoryComponent, Items);
 	DOREPLIFETIME(UInventoryComponent, ItemsSlots);
 }
 
@@ -65,13 +65,7 @@ bool UInventoryComponent::HasItem(AMainItemActor* Item) const
 
 void UInventoryComponent::LogInventory() const
 {
-	for (AMainItemActor* InventoryItem : Items)
-	{
-		if (InventoryItem)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Owner: %s, Item: %s"), *GetOwner()->GetName(), *InventoryItem->GetName());
-		}
-	}
+	
 }
 
 void UInventoryComponent::LogInventoryByClass(TSubclassOf<AMainItemActor> ItemClass) const
@@ -82,15 +76,19 @@ void UInventoryComponent::LogInventoryByClass(TSubclassOf<AMainItemActor> ItemCl
 
 TArray<AMainItemActor*> UInventoryComponent::FindAllItemsByClass(TSubclassOf<AMainItemActor> ItemClass) const
 {
-	TArray<AMainItemActor*> FoudedItems;
-	for (AMainItemActor* Item : Items)
+	
+}
+
+FItemInventorySlot& UInventoryComponent::FindSlotByClass(TSubclassOf<AMainItemActor> ItemClass)
+{
+	for (FItemInventorySlot ItemSlot : ItemsSlots)
 	{
-		if (Item->GetClass() == ItemClass)
+		if (ItemSlot.ItemClass == ItemClass)
 		{
-			FoudedItems.Add(Item);
+			return ItemSlot;
 		}
 	}
-	return FoudedItems;
+	return;
 }
 
 void UInventoryComponent::OnRep_Inventory()
@@ -142,6 +140,7 @@ bool UInventoryComponent::AddItemInternal(AMainItemActor* Item)
 						if (Slot.Items.Num() < ItemData->MaxQuantity)
 						{
 							Slot.Items.Add(Item);
+							PlayerWidget->InventoryWidget->UpdateSlotInfo(Slot);
 							UE_LOG(LogTemp, Display, TEXT("ItemAddedToOldSlot"));
 							return true;
 						}
@@ -158,6 +157,7 @@ bool UInventoryComponent::AddItemInternal(AMainItemActor* Item)
 			Slot.ItemClass = Item->GetClass();
 			Slot.Items.Add(Item);
 			ItemsSlots.Add(Slot);
+			PlayerWidget->InventoryWidget->UpdateSlotInfo(Slot);
 			UE_LOG(LogTemp, Display, TEXT("New slot is created"));
 			return true;
 		}
@@ -179,13 +179,14 @@ bool UInventoryComponent::RemoveItemInternal(AMainItemActor* Item)
 					if (Slot.Items.Num() == 1)
 					{
 						Slot.Items.Remove(Item);
-						
+						PlayerWidget->InventoryWidget->RemoveSlot(Slot.ItemClass);
 						ItemsSlots.Remove(Slot);
 						UE_LOG(LogTemp, Display, TEXT("Slot is removed"));
 						return true;
 					}
 					else
 					{
+						PlayerWidget->InventoryWidget->UpdateSlotInfo(Slot);
 						Slot.Items.Remove(Item);
 						UE_LOG(LogTemp, Display, TEXT("Item removed from slot"));
 						return true;

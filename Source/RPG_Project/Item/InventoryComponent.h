@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "MainItemActor.h"
+#include "../UI/MainHUDWidget.h"
 #include "../ItemDataManager.h"
 #include "InventoryComponent.generated.h"
 
@@ -46,7 +47,9 @@ protected:
 public:	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UPROPERTY(EditAnywhere, )
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	UMainHUDWidget* PlayerWidget;
+
 	UPROPERTY(ReplicatedUsing = OnRep_Inventory, EditAnywhere, BlueprintReadWrite, Replicated, Category = "Inventory")
 	TArray<FItemInventorySlot> ItemsSlots;
 
@@ -73,6 +76,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	TArray<AMainItemActor*> FindAllItemsByClass(TSubclassOf<AMainItemActor> ItemClass) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	FItemInventorySlot& FindSlotByClass(TSubclassOf<AMainItemActor> ItemClass);
 
 private:
 	UFUNCTION()

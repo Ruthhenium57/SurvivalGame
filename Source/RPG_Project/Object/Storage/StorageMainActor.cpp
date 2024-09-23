@@ -17,17 +17,31 @@ void AStorageMainActor::HandleInteract(ACharacter* Character)
 	APlayableCharacter* PlayableCharacter = Cast<APlayableCharacter>(Character);
 	if (PlayableCharacter)
 	{
-		if (InventoryComponent->FindAllItemsByClass(StorageItemClass).IsValidIndex(0))
+		FItemInventorySlot Slot = InventoryComponent->FindSlotByClass(StorageItemClass);
+		if (!Slot.Items.IsEmpty())
 		{
-			if (AMainItemActor* Item = InventoryComponent->FindAllItemsByClass(StorageItemClass)[0])
+			if (AMainItemActor* Item = Slot.Items.Last())
 			{
-				if (PlayableCharacter->InventoryComponent->FindAllItemsByClass(StorageItemClass).Num() < Item->MaxStack)
+				UDataTable* ItemDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Data/DT_Item.DT_Item"));
+				if (ItemDataTable)
 				{
-					PlayableCharacter->InventoryComponent->Items.Add(Item);
-					InventoryComponent->RemoveItem(Item);
-					Item->SetOwner(PlayableCharacter);
+					FName RowName = FName(Item->GetClass()->GetName().RightChop(7).LeftChop(2));
+					FItemData* ItemData = ItemDataTable->FindRow<FItemData>(RowName, TEXT(""));
+					if (ItemData)
+					{
+						if (PlayableCharacter->InventoryComponent->FindSlotByClass(StorageItemClass).Items.Num() >= ItemData->MaxQuantity)
+						{
+							PlayableCharacter->InventoryComponent->AddItem(Item);
+							InventoryComponent->RemoveItem(Item);
+							Item->SetOwner(PlayableCharacter);
+						}
+					}
 				}
 			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Display, TEXT("Storage is empty"));
 		}
 	}
 }
@@ -49,17 +63,31 @@ void AStorageMainActor::HandlePutItemToStorage(ACharacter* Character)
 	APlayableCharacter* PlayableCharacter = Cast<APlayableCharacter>(Character);
 	if (PlayableCharacter)
 	{
-		if (PlayableCharacter->InventoryComponent->FindAllItemsByClass(StorageItemClass).IsValidIndex(0))
+		FItemInventorySlot Slot = PlayableCharacter->InventoryComponent->FindSlotByClass(StorageItemClass);
+		if (!Slot.Items.IsEmpty())
 		{
-			if (AMainItemActor* Item = PlayableCharacter->InventoryComponent->FindAllItemsByClass(StorageItemClass)[0])
+			if (AMainItemActor* Item = Slot.Items.Last())
 			{
-				if (InventoryComponent->FindAllItemsByClass(StorageItemClass).Num() < MaxQuantity)
+				UDataTable* ItemDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Data/DT_Item.DT_Item"));
+				if (ItemDataTable)
 				{
-					InventoryComponent->AddItem(Item);
-					PlayableCharacter->InventoryComponent->Items.Remove(Item);
-					Item->SetOwner(this);
+					FName RowName = FName(Item->GetClass()->GetName().RightChop(7).LeftChop(2));
+					FItemData* ItemData = ItemDataTable->FindRow<FItemData>(RowName, TEXT(""));
+					if (ItemData)
+					{
+						if (InventoryComponent->FindSlotByClass(StorageItemClass).Items.Num() < MaxQuantity)
+						{
+							PlayableCharacter->InventoryComponent->RemoveItem(Item);
+							InventoryComponent->AddItem(Item);
+							Item->SetOwner(PlayableCharacter);
+						}
+					}
 				}
 			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Display, TEXT("Storage is overflowing"));
 		}
 	}
 }

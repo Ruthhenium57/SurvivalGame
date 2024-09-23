@@ -66,6 +66,7 @@ void APlayableCharacter::BeginPlay()
 
 	if (InventoryComponent)
 	{
+		InventoryComponent->PlayerWidget = MainHUDWidget;
 		InventoryComponent->OnItemAdded.AddDynamic(this, &APlayableCharacter::OnItemAdded);
 		InventoryComponent->OnItemRemoved.AddDynamic(this, &APlayableCharacter::OnItemRemoved);
 	}
