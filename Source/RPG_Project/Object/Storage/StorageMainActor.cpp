@@ -10,6 +10,7 @@ AStorageMainActor::AStorageMainActor()
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 	InteractTextBlockName = "Take";
 	InteractTextBlockName2 = "Put";
+	MaxQuantity = 0;
 }
 
 void AStorageMainActor::HandleInteract(ACharacter* Character)
@@ -17,23 +18,27 @@ void AStorageMainActor::HandleInteract(ACharacter* Character)
 	APlayableCharacter* PlayableCharacter = Cast<APlayableCharacter>(Character);
 	if (PlayableCharacter)
 	{
-		FItemInventorySlot Slot = InventoryComponent->FindSlotByClass(StorageItemClass);
-		if (!Slot.Items.IsEmpty())
+		std::pair<FItemInventorySlot&, bool> Result = PlayableCharacter->InventoryComponent->FindSlotByClass(StorageItemClass);
+		if (Result.second)
 		{
-			if (AMainItemActor* Item = Slot.Items.Last())
+			if (!Result.first.Items.IsEmpty())
 			{
-				UDataTable* ItemDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Data/DT_Item.DT_Item"));
-				if (ItemDataTable)
+				if (AMainItemActor* Item = Result.first.Items.Last())
 				{
-					FName RowName = FName(Item->GetClass()->GetName().RightChop(7).LeftChop(2));
-					FItemData* ItemData = ItemDataTable->FindRow<FItemData>(RowName, TEXT(""));
-					if (ItemData)
+					UDataTable* ItemDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Data/DT_Item.DT_Item"));
+					if (ItemDataTable)
 					{
-						if (PlayableCharacter->InventoryComponent->FindSlotByClass(StorageItemClass).Items.Num() >= ItemData->MaxQuantity)
+						FName RowName = FName(Item->GetClass()->GetName().RightChop(7).LeftChop(2));
+						FItemData* ItemData = ItemDataTable->FindRow<FItemData>(RowName, TEXT(""));
+						if (ItemData)
 						{
-							PlayableCharacter->InventoryComponent->AddItem(Item);
-							InventoryComponent->RemoveItem(Item);
-							Item->SetOwner(PlayableCharacter);
+							if (PlayableCharacter->InventoryComponent->FindSlotByClass(StorageItemClass).first.Items.Num() < ItemData->MaxQuantity)
+							{
+								PlayableCharacter->InventoryComponent->AddItem(Item);
+								InventoryComponent->RemoveItem(Item);
+								Item->SetOwner(PlayableCharacter);
+								UE_LOG(LogTemp, Display, TEXT("Item was taken from the storage"));
+							}
 						}
 					}
 				}
@@ -63,23 +68,27 @@ void AStorageMainActor::HandlePutItemToStorage(ACharacter* Character)
 	APlayableCharacter* PlayableCharacter = Cast<APlayableCharacter>(Character);
 	if (PlayableCharacter)
 	{
-		FItemInventorySlot Slot = PlayableCharacter->InventoryComponent->FindSlotByClass(StorageItemClass);
-		if (!Slot.Items.IsEmpty())
+		std::pair<FItemInventorySlot&, bool> Result = PlayableCharacter->InventoryComponent->FindSlotByClass(StorageItemClass);
+		if (Result.second)
 		{
-			if (AMainItemActor* Item = Slot.Items.Last())
+			if (!Result.first.Items.IsEmpty())
 			{
-				UDataTable* ItemDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Data/DT_Item.DT_Item"));
-				if (ItemDataTable)
+				if (AMainItemActor* Item = Result.first.Items.Last())
 				{
-					FName RowName = FName(Item->GetClass()->GetName().RightChop(7).LeftChop(2));
-					FItemData* ItemData = ItemDataTable->FindRow<FItemData>(RowName, TEXT(""));
-					if (ItemData)
+					UDataTable* ItemDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Data/DT_Item.DT_Item"));
+					if (ItemDataTable)
 					{
-						if (InventoryComponent->FindSlotByClass(StorageItemClass).Items.Num() < MaxQuantity)
+						FName RowName = FName(Item->GetClass()->GetName().RightChop(7).LeftChop(2));
+						FItemData* ItemData = ItemDataTable->FindRow<FItemData>(RowName, TEXT(""));
+						if (ItemData)
 						{
-							PlayableCharacter->InventoryComponent->RemoveItem(Item);
-							InventoryComponent->AddItem(Item);
-							Item->SetOwner(PlayableCharacter);
+							if (InventoryComponent->FindSlotByClass(StorageItemClass).first.Items.Num() < MaxQuantity)
+							{
+								PlayableCharacter->InventoryComponent->RemoveItem(Item);
+								InventoryComponent->AddItem(Item);
+								Item->SetOwner(this);
+								UE_LOG(LogTemp, Display, TEXT("Item has been moved to the storage. Item: %s Num of player items: %d"), *Item->GetName(), Result.first.Items.Num());
+							}
 						}
 					}
 				}

@@ -60,13 +60,7 @@ public:
 	bool RemoveItem(AMainItemActor* Item);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	bool HasItem(AMainItemActor* Item) const;
-
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void LogInventory() const;
-
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void LogInventoryByClass(TSubclassOf<AMainItemActor> ItemClass) const;
 
 	UPROPERTY(BlueprintAssignable, Category = "Event")
 	FOnItemAddedDelegate OnItemAdded;
@@ -75,10 +69,7 @@ public:
 	FOnItemRemovedDelegate OnItemRemoved;
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	TArray<AMainItemActor*> FindAllItemsByClass(TSubclassOf<AMainItemActor> ItemClass) const;
-
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	FItemInventorySlot& FindSlotByClass(TSubclassOf<AMainItemActor> ItemClass);
+	bool FindSlotByClass(TSubclassOf<AMainItemActor> ItemClass, FItemInventorySlot& OutItemSlot);
 
 private:
 	UFUNCTION()
@@ -94,4 +85,10 @@ private:
 	bool AddItemInternal(AMainItemActor* Item);
 
 	bool RemoveItemInternal(AMainItemActor* Item);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastUpdateSlotWidget(FItemInventorySlot ItemSlot);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRemoveSlotWidget(TSubclassOf<AMainItemActor> ItemClass);
 };

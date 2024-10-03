@@ -41,6 +41,15 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HUD", meta = (AllowPrivateAccess = "true"))
 	UMainHUDWidget* MainHUDWidget;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "HUD")
+	TSubclassOf<UMainHUDWidget> MainHUDWidgetClass;
+
+	UFUNCTION()
+	void InitializeWidget();
+
+	UPROPERTY()
+	FTimerHandle TimerHandle_InitWidget;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
 	class UCameraComponent* FirstPersonCamera;
 

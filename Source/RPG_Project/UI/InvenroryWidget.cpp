@@ -22,8 +22,12 @@ void UInvenroryWidget::UpdateSlotInfo(FItemInventorySlot ItemSlot)
 				}
 			}
 		}
+		AddNewSlot(ItemSlot);
 	}
-	AddNewSlot(ItemSlot);
+	else
+	{
+		RemoveSlot(ItemSlot.ItemClass);
+	}
 }
 
 void UInvenroryWidget::UpdateInventory(TArray<FItemInventorySlot> ItemSlots)
@@ -33,11 +37,14 @@ void UInvenroryWidget::UpdateInventory(TArray<FItemInventorySlot> ItemSlots)
 
 void UInvenroryWidget::AddNewSlot(FItemInventorySlot ItemSlot)
 {
-	if (UItemSlotWidget* Widget = CreateWidget<UItemSlotWidget>(this, ItemWidgetClass, FName(ItemSlot.ItemClass->GetName())))
+	if (!ItemSlot.Items.IsEmpty())
 	{
-		InventoryList->AddChild(Widget);
-		Widget->UpdateItemInfo(ItemSlot);
-		UE_LOG(LogTemp, Display, TEXT("SlotAddedToWidget"));
+		if (UItemSlotWidget* Widget = CreateWidget<UItemSlotWidget>(this, ItemWidgetClass, FName(ItemSlot.ItemClass->GetName())))
+		{
+			InventoryList->AddChild(Widget);
+			Widget->UpdateItemInfo(ItemSlot);
+			UE_LOG(LogTemp, Display, TEXT("NewSlotAddedToWidget"));
+		}
 	}
 }
 

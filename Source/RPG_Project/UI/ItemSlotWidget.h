@@ -20,11 +20,11 @@ public:
 
 protected:
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* ItemName;
+	class UTextBlock* ItemName;
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* ItemQuantity;
+	class UTextBlock* ItemQuantity;
 
 	UPROPERTY(meta = (BindWidget))
-	UImage* ItemImage;
+	class UImage* ItemImage;
 };

@@ -48,14 +48,16 @@ void APlayableCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	GetCharacterMovement()->MaxWalkSpeed = DefaultWalkSpeed;
-	
+
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle_InitWidget, this, &APlayableCharacter::InitializeWidget, 0.1f, false);
+
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 	if (PlayerController)
 	{
 		AGameHUD* GameHUD = Cast<AGameHUD>(PlayerController->GetHUD());
 		if (GameHUD)
 		{
-			MainHUDWidget = GameHUD->MainHUDWidget;
+			//MainHUDWidget = GameHUD->MainHUDWidget;
 		}
 	}
 
@@ -66,9 +68,44 @@ void APlayableCharacter::BeginPlay()
 
 	if (InventoryComponent)
 	{
-		InventoryComponent->PlayerWidget = MainHUDWidget;
 		InventoryComponent->OnItemAdded.AddDynamic(this, &APlayableCharacter::OnItemAdded);
 		InventoryComponent->OnItemRemoved.AddDynamic(this, &APlayableCharacter::OnItemRemoved);
+	}
+}
+
+void APlayableCharacter::InitializeWidget()
+{
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
+	{
+		//AGameHUD* GameHUD = Cast<AGameHUD>(PlayerController->GetHUD());
+		//if (GameHUD && GameHUD->MainHUDWidget)
+		//{
+		//	MainHUDWidget = GameHUD->MainHUDWidget;
+		//	InventoryComponent->PlayerWidget = MainHUDWidget;
+		//	UE_LOG(LogTemp, Warning, TEXT("MainWidgetIsCreated"));
+		//}
+		//else
+		//{
+		//	UE_LOG(LogTemp, Warning, TEXT("HUD or MainHUDWidget is not ready yet, retrying..."));
+		//	GetWorld()->GetTimerManager().SetTimer(TimerHandle_InitWidget, this, &APlayableCharacter::InitializeWidget, 0.1f, false);
+		//}
+	}
+
+	if (!MainHUDWidget && MainHUDWidgetClass)
+	{
+		MainHUDWidget = CreateWidget<UMainHUDWidget>(GetWorld(), MainHUDWidgetClass);
+		if (MainHUDWidget)
+		{
+			MainHUDWidget->AddToViewport();
+			InventoryComponent->PlayerWidget = MainHUDWidget;
+			UE_LOG(LogTemp, Warning, TEXT("PlayerWidget initialized!"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("HUD or MainHUDWidget is not ready yet, retrying..."));
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_InitWidget, this, &APlayableCharacter::InitializeWidget, 0.1f, false);
+		}
 	}
 }
 
@@ -285,12 +322,12 @@ void APlayableCharacter::Interact()
 		if (!HasAuthority())
 		{
 			ServerInteract(HitResult.GetActor());
-			UE_LOG(LogTemp, Warning, TEXT("Running on Client"));
+			UE_LOG(LogTemp, Warning, TEXT("Player interact running on Client"));
 		}
 		else
 		{
 			ServerInteract_Implementation(HitResult.GetActor());
-			UE_LOG(LogTemp, Warning, TEXT("Running on Server"));
+			UE_LOG(LogTemp, Warning, TEXT("Player interact running on Server"));
 		}
 	}
 }
@@ -352,7 +389,7 @@ void APlayableCharacter::ToggleInventory()
 {
 	if (MainHUDWidget && MainHUDWidget->InventoryWidget)
 	{
-		if (bIsInventoryHiden)
+		if (bIsInventoryHiden && MainHUDWidget->InventoryWidget->GetVisibility() == ESlateVisibility::Collapsed)
 		{
 			MainHUDWidget->InventoryWidget->SetVisibility(ESlateVisibility::Visible);
 			bIsInventoryHiden = false;

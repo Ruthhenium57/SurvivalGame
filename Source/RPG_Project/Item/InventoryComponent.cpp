@@ -35,12 +35,21 @@ bool UInventoryComponent::AddItem(AMainItemActor* Item)
 {
 	if (GetOwner()->HasAuthority())
 	{
-		return AddItemInternal(Item);
+		bool bSuccess = AddItemInternal(Item);
+		if (bSuccess)
+		{
+			FItemInventorySlot OutSlot;
+			bool bOutSlot = FindSlotByClass(Item->GetClass(), OutSlot);
+			if (bOutSlot)
+			{
+				MulticastUpdateSlotWidget(OutSlot);
+			}
+		}
+		return bSuccess;
 	}
 	else
 	{
 		ServerAddItem(Item);
-		OnItemAdded.Broadcast(true, Item);
 		return false;
 	}
 }
@@ -49,7 +58,17 @@ bool UInventoryComponent::RemoveItem(AMainItemActor* Item)
 {
 	if (GetOwnerRole() == ROLE_Authority)
 	{
-		return RemoveItemInternal(Item);
+		bool bSuccess = RemoveItemInternal(Item);
+		if (bSuccess)
+		{
+			FItemInventorySlot OutSlot;
+			bool bOutSlot = FindSlotByClass(Item->GetClass(), OutSlot);
+			if (bOutSlot)
+			{
+				MulticastUpdateSlotWidget(OutSlot);
+			}
+		}
+		return bSuccess;
 	}
 	else
 	{
@@ -58,48 +77,36 @@ bool UInventoryComponent::RemoveItem(AMainItemActor* Item)
 	}
 }
 
-bool UInventoryComponent::HasItem(AMainItemActor* Item) const
-{
-	return !FindAllItemsByClass(Item->GetClass()).IsEmpty();
-}
-
 void UInventoryComponent::LogInventory() const
 {
 	
 }
 
-void UInventoryComponent::LogInventoryByClass(TSubclassOf<AMainItemActor> ItemClass) const
+bool UInventoryComponent::FindSlotByClass(TSubclassOf<AMainItemActor> ItemClass, FItemInventorySlot& OutItemSlot)
 {
-	int32 Quantity = FindAllItemsByClass(ItemClass).Num();
-	UE_LOG(LogTemp, Warning, TEXT("Owner: %s, Item: %s, Quantity: %d"), *GetOwner()->GetName(), *ItemClass->GetName(), Quantity);
-}
-
-TArray<AMainItemActor*> UInventoryComponent::FindAllItemsByClass(TSubclassOf<AMainItemActor> ItemClass) const
-{
-	
-}
-
-FItemInventorySlot& UInventoryComponent::FindSlotByClass(TSubclassOf<AMainItemActor> ItemClass)
-{
-	for (FItemInventorySlot ItemSlot : ItemsSlots)
+	for (FItemInventorySlot& ItemSlot : ItemsSlots)
 	{
 		if (ItemSlot.ItemClass == ItemClass)
 		{
-			return ItemSlot;
+			OutItemSlot = ItemSlot;
+			return true;
 		}
 	}
-	return;
+
+	static FItemInventorySlot EmptySlot;
+	EmptySlot.ItemClass = ItemClass;
+	OutItemSlot = EmptySlot;
+	return false;
 }
 
 void UInventoryComponent::OnRep_Inventory()
 {
-	//LogInventory();
+	
 }
 
 void UInventoryComponent::ServerAddItem_Implementation(AMainItemActor* Item)
 {
-	OnItemAdded.Broadcast(AddItemInternal(Item), Item);
-	UE_LOG(LogTemp, Warning, TEXT("ServerAddItemIsCalled"));
+	AddItem(Item);
 }
 
 bool UInventoryComponent::ServerAddItem_Validate(AMainItemActor* Item)
@@ -109,7 +116,7 @@ bool UInventoryComponent::ServerAddItem_Validate(AMainItemActor* Item)
 
 void UInventoryComponent::ServerRemoveItem_Implementation(AMainItemActor* Item)
 {
-	OnItemRemoved.Broadcast(RemoveItemInternal(Item), Item);
+	RemoveItemInternal(Item);
 }
 
 bool UInventoryComponent::ServerRemoveItem_Validate(AMainItemActor* Item)
@@ -140,8 +147,15 @@ bool UInventoryComponent::AddItemInternal(AMainItemActor* Item)
 						if (Slot.Items.Num() < ItemData->MaxQuantity)
 						{
 							Slot.Items.Add(Item);
-							PlayerWidget->InventoryWidget->UpdateSlotInfo(Slot);
 							UE_LOG(LogTemp, Display, TEXT("ItemAddedToOldSlot"));
+							if (PlayerWidget)
+							{
+								//PlayerWidget->InventoryWidget->UpdateSlotInfo(Slot);
+							}
+							else
+							{
+								UE_LOG(LogTemp, Display, TEXT("huiiiiiiii %s"), *GetOwner()->GetName());
+							}
 							return true;
 						}
 						else
@@ -157,7 +171,7 @@ bool UInventoryComponent::AddItemInternal(AMainItemActor* Item)
 			Slot.ItemClass = Item->GetClass();
 			Slot.Items.Add(Item);
 			ItemsSlots.Add(Slot);
-			PlayerWidget->InventoryWidget->UpdateSlotInfo(Slot);
+			MulticastUpdateSlotWidget(Slot);
 			UE_LOG(LogTemp, Display, TEXT("New slot is created"));
 			return true;
 		}
@@ -179,14 +193,20 @@ bool UInventoryComponent::RemoveItemInternal(AMainItemActor* Item)
 					if (Slot.Items.Num() == 1)
 					{
 						Slot.Items.Remove(Item);
-						PlayerWidget->InventoryWidget->RemoveSlot(Slot.ItemClass);
+						if(PlayerWidget)
+						{
+							PlayerWidget->InventoryWidget->RemoveSlot(Slot.ItemClass);
+						}
 						ItemsSlots.Remove(Slot);
 						UE_LOG(LogTemp, Display, TEXT("Slot is removed"));
 						return true;
 					}
 					else
 					{
-						PlayerWidget->InventoryWidget->UpdateSlotInfo(Slot);
+						if (PlayerWidget)
+						{
+							PlayerWidget->InventoryWidget->UpdateSlotInfo(Slot);
+						}
 						Slot.Items.Remove(Item);
 						UE_LOG(LogTemp, Display, TEXT("Item removed from slot"));
 						return true;
@@ -197,4 +217,24 @@ bool UInventoryComponent::RemoveItemInternal(AMainItemActor* Item)
 	}
 	UE_LOG(LogTemp, Error, TEXT("Item not been removed"));
 	return false;
+}
+
+void UInventoryComponent::MulticastUpdateSlotWidget_Implementation(FItemInventorySlot ItemSlot, bool b)
+{
+	if (APawn* Pawn = Cast<APawn>(GetOwner()))
+	{
+		if (Pawn->IsLocallyControlled())
+		{
+			if (PlayerWidget)
+			{
+				PlayerWidget->InventoryWidget->UpdateSlotInfo(ItemSlot);
+				UE_LOG(LogTemp, Warning, TEXT("Inventory updated on local client"));
+			}
+		}
+	}
+}
+
+void UInventoryComponent::MulticastRemoveSlotWidget_Implementation(TSubclassOf<AMainItemActor> ItemClass)
+{
+
 }
