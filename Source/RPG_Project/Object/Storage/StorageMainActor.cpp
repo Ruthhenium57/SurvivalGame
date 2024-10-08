@@ -11,6 +11,13 @@ AStorageMainActor::AStorageMainActor()
 	InteractTextBlockName = "Take";
 	InteractTextBlockName2 = "Put";
 	MaxQuantity = 0;
+	TextRender = CreateDefaultSubobject<UTextRenderComponent>(TEXT("TextRender"));
+	TextRender->SetupAttachment(StaticMesh);
+}
+
+void AStorageMainActor::BeginPlay()
+{
+	Super::BeginPlay();
 }
 
 void AStorageMainActor::HandleInteract(ACharacter* Character)
@@ -18,27 +25,40 @@ void AStorageMainActor::HandleInteract(ACharacter* Character)
 	APlayableCharacter* PlayableCharacter = Cast<APlayableCharacter>(Character);
 	if (PlayableCharacter)
 	{
-		std::pair<FItemInventorySlot&, bool> Result = PlayableCharacter->InventoryComponent->FindSlotByClass(StorageItemClass);
-		if (Result.second)
+		FItemInventorySlot StorageSlot;
+		InventoryComponent->FindSlotByClass(StorageItemClass, StorageSlot);
+		if (!StorageSlot.Items.IsEmpty())
 		{
-			if (!Result.first.Items.IsEmpty())
+			if (AMainItemActor* Item = StorageSlot.Items.Last())
 			{
-				if (AMainItemActor* Item = Result.first.Items.Last())
+				UDataTable* ItemDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Data/DT_Item.DT_Item"));
+				if (ItemDataTable)
 				{
-					UDataTable* ItemDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Data/DT_Item.DT_Item"));
-					if (ItemDataTable)
+					FName RowName = FName(Item->GetClass()->GetName().RightChop(7).LeftChop(2));
+					FItemData* ItemData = ItemDataTable->FindRow<FItemData>(RowName, TEXT(""));
+					if (ItemData)
 					{
-						FName RowName = FName(Item->GetClass()->GetName().RightChop(7).LeftChop(2));
-						FItemData* ItemData = ItemDataTable->FindRow<FItemData>(RowName, TEXT(""));
-						if (ItemData)
+						FItemInventorySlot PlayerSlot;
+						if(PlayableCharacter->InventoryComponent->FindSlotByClass(StorageItemClass, PlayerSlot))
 						{
-							if (PlayableCharacter->InventoryComponent->FindSlotByClass(StorageItemClass).first.Items.Num() < ItemData->MaxQuantity)
+							if (PlayerSlot.Items.Num() < ItemData->MaxQuantity)
 							{
-								PlayableCharacter->InventoryComponent->AddItem(Item);
 								InventoryComponent->RemoveItem(Item);
+								PlayableCharacter->InventoryComponent->AddItem(Item);
 								Item->SetOwner(PlayableCharacter);
 								UE_LOG(LogTemp, Display, TEXT("Item was taken from the storage"));
 							}
+							else
+							{
+								UE_LOG(LogTemp, Error, TEXT("Player storage is overflowing"));
+							}
+						}
+						else
+						{
+							InventoryComponent->RemoveItem(Item);
+							PlayableCharacter->InventoryComponent->AddItem(Item);
+							Item->SetOwner(PlayableCharacter);
+							UE_LOG(LogTemp, Display, TEXT("Item was taken from the storage"));
 						}
 					}
 				}
@@ -46,7 +66,7 @@ void AStorageMainActor::HandleInteract(ACharacter* Character)
 		}
 		else
 		{
-			UE_LOG(LogTemp, Display, TEXT("Storage is empty"));
+			UE_LOG(LogTemp, Error, TEXT("Storage is empty"));
 		}
 	}
 }
@@ -68,27 +88,43 @@ void AStorageMainActor::HandlePutItemToStorage(ACharacter* Character)
 	APlayableCharacter* PlayableCharacter = Cast<APlayableCharacter>(Character);
 	if (PlayableCharacter)
 	{
-		std::pair<FItemInventorySlot&, bool> Result = PlayableCharacter->InventoryComponent->FindSlotByClass(StorageItemClass);
-		if (Result.second)
+		FItemInventorySlot PlayerSlot;
+		PlayableCharacter->InventoryComponent->FindSlotByClass(StorageItemClass, PlayerSlot);
+		UE_LOG(LogTemp, Display, TEXT("Before accessing PlayerSlot.Items. Num of items: %d"), PlayerSlot.Items.Num());
+		if (!PlayerSlot.Items.IsEmpty())
 		{
-			if (!Result.first.Items.IsEmpty())
+			UE_LOG(LogTemp, Display, TEXT("Before accessing PlayerSlot.Items. Num of items: %d"), PlayerSlot.Items.Num());
+			if (AMainItemActor* Item = PlayerSlot.Items.Last())
 			{
-				if (AMainItemActor* Item = Result.first.Items.Last())
+				UDataTable* ItemDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Data/DT_Item.DT_Item"));
+				if (ItemDataTable)
 				{
-					UDataTable* ItemDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Data/DT_Item.DT_Item"));
-					if (ItemDataTable)
+					FName RowName = FName(Item->GetClass()->GetName().RightChop(7).LeftChop(2));
+					FItemData* ItemData = ItemDataTable->FindRow<FItemData>(RowName, TEXT(""));
+					if (ItemData)
 					{
-						FName RowName = FName(Item->GetClass()->GetName().RightChop(7).LeftChop(2));
-						FItemData* ItemData = ItemDataTable->FindRow<FItemData>(RowName, TEXT(""));
-						if (ItemData)
+						FItemInventorySlot StorageSlot;
+						if(InventoryComponent->FindSlotByClass(StorageItemClass, StorageSlot))
 						{
-							if (InventoryComponent->FindSlotByClass(StorageItemClass).first.Items.Num() < MaxQuantity)
+							UE_LOG(LogTemp, Display, TEXT("Before accessing StorageSlot.Items. Num of items: %d"), StorageSlot.Items.Num());
+							if (StorageSlot.Items.Num() < MaxQuantity)
 							{
 								PlayableCharacter->InventoryComponent->RemoveItem(Item);
 								InventoryComponent->AddItem(Item);
 								Item->SetOwner(this);
-								UE_LOG(LogTemp, Display, TEXT("Item has been moved to the storage. Item: %s Num of player items: %d"), *Item->GetName(), Result.first.Items.Num());
+								UE_LOG(LogTemp, Display, TEXT("Item has been moved to the storage"));
 							}
+							else
+							{
+								UE_LOG(LogTemp, Error, TEXT("Storage is overflowing"));
+							}
+						}
+						else
+						{
+							PlayableCharacter->InventoryComponent->RemoveItem(Item);
+							InventoryComponent->AddItem(Item);
+							Item->SetOwner(this);
+							UE_LOG(LogTemp, Display, TEXT("Item has been moved to the storage"));
 						}
 					}
 				}
@@ -96,7 +132,7 @@ void AStorageMainActor::HandlePutItemToStorage(ACharacter* Character)
 		}
 		else
 		{
-			UE_LOG(LogTemp, Display, TEXT("Storage is overflowing"));
+			UE_LOG(LogTemp, Error, TEXT("Player storage is empty"));
 		}
 	}
 }

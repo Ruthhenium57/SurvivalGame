@@ -148,14 +148,6 @@ bool UInventoryComponent::AddItemInternal(AMainItemActor* Item)
 						{
 							Slot.Items.Add(Item);
 							UE_LOG(LogTemp, Display, TEXT("ItemAddedToOldSlot"));
-							if (PlayerWidget)
-							{
-								//PlayerWidget->InventoryWidget->UpdateSlotInfo(Slot);
-							}
-							else
-							{
-								UE_LOG(LogTemp, Display, TEXT("huiiiiiiii %s"), *GetOwner()->GetName());
-							}
 							return true;
 						}
 						else
@@ -171,7 +163,6 @@ bool UInventoryComponent::AddItemInternal(AMainItemActor* Item)
 			Slot.ItemClass = Item->GetClass();
 			Slot.Items.Add(Item);
 			ItemsSlots.Add(Slot);
-			MulticastUpdateSlotWidget(Slot);
 			UE_LOG(LogTemp, Display, TEXT("New slot is created"));
 			return true;
 		}
@@ -219,7 +210,7 @@ bool UInventoryComponent::RemoveItemInternal(AMainItemActor* Item)
 	return false;
 }
 
-void UInventoryComponent::MulticastUpdateSlotWidget_Implementation(FItemInventorySlot ItemSlot, bool b)
+void UInventoryComponent::MulticastUpdateSlotWidget_Implementation(FItemInventorySlot ItemSlot)
 {
 	if (APawn* Pawn = Cast<APawn>(GetOwner()))
 	{
