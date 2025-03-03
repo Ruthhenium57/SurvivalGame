@@ -9,8 +9,9 @@
 #include "../ItemDataManager.h"
 #include "InventoryComponent.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemAddedDelegate, bool, bSuccess, AMainItemActor*, Item);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemRemovedDelegate, bool, bSuccess, AMainItemActor*, Item);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemAddedDelegate, bool, bSuccess, AMainItemActor*, Item);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemRemovedDelegate, bool, bSuccess, AMainItemActor*, Item);
 
 USTRUCT(BlueprintType)
 
@@ -40,6 +41,9 @@ class RPG_PROJECT_API UInventoryComponent : public UActorComponent
 public:	
 	UInventoryComponent();
 
+	UPROPERTY(BlueprintAssignable, Category = "Inventory")
+	FOnInventoryUpdated OnInventoryUpdated;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -50,9 +54,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	UMainHUDWidget* PlayerWidget;
 
-	UPROPERTY(ReplicatedUsing = OnRep_Inventory, EditAnywhere, BlueprintReadWrite, Replicated, Category = "Inventory")
-	TArray<FItemInventorySlot> ItemsSlots;
-
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	bool AddItem(AMainItemActor* Item);
 
@@ -62,11 +63,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void LogInventory() const;
 
-	UPROPERTY(BlueprintAssignable, Category = "Event")
+	/*UPROPERTY(BlueprintAssignable, Category = "Event")
 	FOnItemAddedDelegate OnItemAdded;
 
 	UPROPERTY(BlueprintAssignable, Category = "Event")
-	FOnItemRemovedDelegate OnItemRemoved;
+	FOnItemRemovedDelegate OnItemRemoved;*/
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	bool FindSlotByClass(TSubclassOf<AMainItemActor> ItemClass, FItemInventorySlot& OutItemSlot);
@@ -75,7 +76,9 @@ private:
 	UFUNCTION()
 	void OnRep_Inventory();
 
-private:
+	UPROPERTY(ReplicatedUsing = OnRep_Inventory, EditAnywhere, Replicated, Category = "Inventory")
+	TArray<FItemInventorySlot> ItemsSlots;
+
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerAddItem(AMainItemActor* Item);
 

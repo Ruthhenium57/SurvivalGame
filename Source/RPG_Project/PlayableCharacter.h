@@ -35,7 +35,7 @@ private:
 	float SprintSpeed;
 	bool bIsSprinting;
 
-	void PerformLineTrace(FHitResult& HitResult);
+	void PerformLineTrace(FHitResult& HitResult, FVector Location, FRotator Rotation);
 
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HUD", meta = (AllowPrivateAccess = "true"))
@@ -113,13 +113,16 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Interaction")
 	float InteractionDistance;
+
+	UFUNCTION(Category = "Interaction")
 	void Interact();
 	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerInteract(AActor* HitActor);
+	void ServerInteract(AActor* HitActor, FVector ClientLocation, FRotator ClientRotation);
 
+	UFUNCTION(Category = "Interaction")
 	void PutItemToStorage();
 	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerPutItemToStorage(AActor* HitActor);
+	void ServerPutItemToStorage(AActor* HitActor, FVector ClientLocation, FRotator ClientRotation);
 
 	UFUNCTION()
 	void OnItemAdded(bool bSuccess, AMainItemActor* Item);

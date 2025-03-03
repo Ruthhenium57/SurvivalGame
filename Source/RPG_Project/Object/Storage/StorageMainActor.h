@@ -19,7 +19,9 @@ class RPG_PROJECT_API AStorageMainActor : public AObjectMainActor
 public:
 	AStorageMainActor();
 
+	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 	void HandleInteract(ACharacter* Character) override;
 
 	void PutItemToStorage(ACharacter* Character) override;

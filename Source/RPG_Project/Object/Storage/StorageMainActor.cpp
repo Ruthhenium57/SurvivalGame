@@ -15,9 +15,21 @@ AStorageMainActor::AStorageMainActor()
 	TextRender->SetupAttachment(StaticMesh);
 }
 
+void AStorageMainActor::OnConstruction(const FTransform& Transform)
+{
+	
+}
+
 void AStorageMainActor::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+void AStorageMainActor::Tick(float DeltaTime)
+{
+	FItemInventorySlot StorageSlot;
+	InventoryComponent->FindSlotByClass(StorageItemClass, StorageSlot);
+	TextRender->SetText(FText::FromString(FString::Printf(TEXT("Num Of Items : %d"), StorageSlot.Items.Num())));
 }
 
 void AStorageMainActor::HandleInteract(ACharacter* Character)
@@ -93,7 +105,6 @@ void AStorageMainActor::HandlePutItemToStorage(ACharacter* Character)
 		UE_LOG(LogTemp, Display, TEXT("Before accessing PlayerSlot.Items. Num of items: %d"), PlayerSlot.Items.Num());
 		if (!PlayerSlot.Items.IsEmpty())
 		{
-			UE_LOG(LogTemp, Display, TEXT("Before accessing PlayerSlot.Items. Num of items: %d"), PlayerSlot.Items.Num());
 			if (AMainItemActor* Item = PlayerSlot.Items.Last())
 			{
 				UDataTable* ItemDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Data/DT_Item.DT_Item"));

@@ -62,11 +62,8 @@ bool UInventoryComponent::RemoveItem(AMainItemActor* Item)
 		if (bSuccess)
 		{
 			FItemInventorySlot OutSlot;
-			bool bOutSlot = FindSlotByClass(Item->GetClass(), OutSlot);
-			if (bOutSlot)
-			{
-				MulticastUpdateSlotWidget(OutSlot);
-			}
+			FindSlotByClass(Item->GetClass(), OutSlot);
+			MulticastUpdateSlotWidget(OutSlot);
 		}
 		return bSuccess;
 	}
@@ -177,28 +174,21 @@ bool UInventoryComponent::RemoveItemInternal(AMainItemActor* Item)
 	{
 		if (!ItemsSlots.IsEmpty())
 		{
-			for (FItemInventorySlot& Slot : ItemsSlots)
+			for (int32 i = 0; i < ItemsSlots.Num(); i++) // Loops for inventory
 			{
-				if (Slot.ItemClass == Item->GetClass())
+				FItemInventorySlot& Slot = ItemsSlots[i];
+
+				if (Slot.ItemClass == Item->GetClass()) // If has item
 				{
-					if (Slot.Items.Num() == 1)
+					if (Slot.Items.Num() == 1) // If this last item in slot
 					{
-						Slot.Items.Remove(Item);
-						if(PlayerWidget)
-						{
-							PlayerWidget->InventoryWidget->RemoveSlot(Slot.ItemClass);
-						}
-						ItemsSlots.Remove(Slot);
+						ItemsSlots.RemoveAt(i); // Delete slot by i
 						UE_LOG(LogTemp, Display, TEXT("Slot is removed"));
 						return true;
 					}
 					else
 					{
-						if (PlayerWidget)
-						{
-							PlayerWidget->InventoryWidget->UpdateSlotInfo(Slot);
-						}
-						Slot.Items.Remove(Item);
+						Slot.Items.Remove(Item); // Delete slot by i
 						UE_LOG(LogTemp, Display, TEXT("Item removed from slot"));
 						return true;
 					}

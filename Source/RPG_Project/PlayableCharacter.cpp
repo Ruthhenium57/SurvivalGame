@@ -68,8 +68,8 @@ void APlayableCharacter::BeginPlay()
 
 	if (InventoryComponent)
 	{
-		InventoryComponent->OnItemAdded.AddDynamic(this, &APlayableCharacter::OnItemAdded);
-		InventoryComponent->OnItemRemoved.AddDynamic(this, &APlayableCharacter::OnItemRemoved);
+		//InventoryComponent->OnItemAdded.AddDynamic(this, &APlayableCharacter::OnItemAdded);
+		//InventoryComponent->OnItemRemoved.AddDynamic(this, &APlayableCharacter::OnItemRemoved);
 	}
 }
 
@@ -287,7 +287,7 @@ void APlayableCharacter::UpdateInteractInfo()
 	if (MainHUDWidget)
 	{
 		FHitResult HitResult;
-		PerformLineTrace(HitResult);
+		PerformLineTrace(HitResult, FirstPersonCamera->GetComponentLocation(), FirstPersonCamera->GetComponentRotation());
 		AActor* HitActor = HitResult.GetActor();
 		if (HitActor && HitActor->GetClass()->ImplementsInterface(UInteractableInterface::StaticClass()))
 		{
@@ -314,75 +314,81 @@ void APlayableCharacter::BeginStaminaRegen()
 
 void APlayableCharacter::Interact()
 {
+	if (!IsLocallyControlled())  // If server
+	{
+		return; 
+	}
+
 	FHitResult HitResult;
-	PerformLineTrace(HitResult);
+	PerformLineTrace(HitResult, FirstPersonCamera->GetComponentLocation(), FirstPersonCamera->GetComponentRotation());
 
-	if (HitResult.GetActor() && HitResult.GetActor()->Implements<UInteractableInterface>())
+	if (HitResult.GetActor() && HitResult.GetActor()->Implements<UInteractableInterface>()) // If has interface
 	{
-		if (!HasAuthority())
-		{
-			ServerInteract(HitResult.GetActor());
-			UE_LOG(LogTemp, Warning, TEXT("Player interact running on Client"));
-		}
-		else
-		{
-			ServerInteract_Implementation(HitResult.GetActor());
-			UE_LOG(LogTemp, Warning, TEXT("Player interact running on Server"));
-		}
+		ServerInteract(HitResult.GetActor(), FirstPersonCamera->GetComponentLocation(), FirstPersonCamera->GetComponentRotation());
 	}
 }
 
-void APlayableCharacter::ServerInteract_Implementation(AActor* HitActor)
+void APlayableCharacter::ServerInteract_Implementation(AActor* HitActor, FVector ClientLocation, FRotator ClientRotation)
 {
-	if (HitActor && HitActor->Implements<UInteractableInterface>())
+	if (!HitActor || !HitActor->Implements<UInteractableInterface>())
 	{
-		IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor);
-		if (Interactable)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("InteractItemName: %s"), *HitActor->GetClass()->GetName().RightChop(7).LeftChop(2))
-			Interactable->Interact(this);
-		}
+		UE_LOG(LogTemp, Warning, TEXT("Server: Target is invalid or does not implement interface"));
+		return;
+	}
+
+
+	FHitResult ServerHitResult;
+	PerformLineTrace(ServerHitResult, ClientLocation, ClientRotation);
+	if (ServerHitResult.GetActor() != HitActor)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Server: Expected Hit Actor - %s, but got - %s"),
+			*GetNameSafe(HitActor), *GetNameSafe(ServerHitResult.GetActor()));
+		UE_LOG(LogTemp, Warning, TEXT("Server: Client tried to interact with an invalid target"));
+		return;  // Client send false hit result
+	}
+
+	if (IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor))
+	{
+		Interactable->Interact(this); // Call interact
 	}
 }
 
-bool APlayableCharacter::ServerInteract_Validate(AActor* HitActor)
+bool APlayableCharacter::ServerInteract_Validate(AActor* HitActor, FVector ClientLocation, FRotator ClientRotation)
 {
-	return true;
+	return HitActor != nullptr;
 }
 
 void APlayableCharacter::PutItemToStorage()
 {
-	FHitResult HitResult;
-	PerformLineTrace(HitResult);
-
-	if (HitResult.GetActor() && HitResult.GetActor()->Implements<UInteractableInterface>())
+	if (!IsLocallyControlled()) // If server
 	{
-		if (HasAuthority())
-		{
-			ServerPutItemToStorage(HitResult.GetActor());
-		}
-		else
-		{
-			ServerPutItemToStorage(HitResult.GetActor());
-		}
+		return; 
+	}
+
+	FHitResult HitResult;
+	PerformLineTrace(HitResult, FirstPersonCamera->GetComponentLocation(), FirstPersonCamera->GetComponentRotation());
+
+	if (HitResult.GetActor() && HitResult.GetActor()->Implements<UInteractableInterface>()) // If has interface
+	{
+		ServerPutItemToStorage(HitResult.GetActor(), FirstPersonCamera->GetComponentLocation(), FirstPersonCamera->GetComponentRotation());
 	}
 }
 
 void APlayableCharacter::OnItemAdded(bool bSuccess, AMainItemActor* Item)
 {
-	//UE_LOG(LogTemp, Warning, TEXT("OnItemIsAddedIsCalled"));
-	//if (bSuccess && Item)
-	//{
-	//	MainHUDWidget->InventoryWidget->AddItemToList(Item);
-	//
+	/*UE_LOG(LogTemp, Warning, TEXT("OnItemIsAddedIsCalled"));
+	if (bSuccess && Item)
+	{
+		MainHUDWidget->InventoryWidget->AddItemToList(Item);
+	}*/
 }
 
 void APlayableCharacter::OnItemRemoved(bool bSuccess, AMainItemActor* Item)
 {
-	//if (bSuccess && Item)
-	//{
-	//	MainHUDWidget->InventoryWidget->AddItemToList(Item);
-	//}
+	/*if (bSuccess && Item)
+	{
+		MainHUDWidget->InventoryWidget->AddItemToList(Item);
+	}*/
 }
 
 void APlayableCharacter::ToggleInventory()
@@ -399,7 +405,6 @@ void APlayableCharacter::ToggleInventory()
 			MainHUDWidget->InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
 			bIsInventoryHiden = true;
 		}
-		UE_LOG(LogTemp, Display, TEXT("Inventory toggle"));
 	}
 	else
 	{
@@ -407,28 +412,38 @@ void APlayableCharacter::ToggleInventory()
 	}
 }
 
-void APlayableCharacter::ServerPutItemToStorage_Implementation(AActor* HitActor)
+void APlayableCharacter::ServerPutItemToStorage_Implementation(AActor* HitActor, FVector ClientLocation, FRotator ClientRotation)
 {
+	if (!HitActor || !HitActor->Implements<UInteractableInterface>())
+	{
+		return;
+	}
+
+	FHitResult ServerHitResult;
+	PerformLineTrace(ServerHitResult, ClientLocation, ClientRotation);
+	if (ServerHitResult.GetActor() != HitActor)
+	{
+		return;  // Client send false hit result
+	}
+
 	if (HitActor && HitActor->Implements<UInteractableInterface>())
 	{
-		IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor);
-		if (Interactable)
+		if (IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor))
 		{
-			//UE_LOG(LogTemp, Warning, TEXT("CharacterTakeItem"));
-			Interactable->PutItemToStorage(this);
+			Interactable->PutItemToStorage(this); // Call func
 		}
 	}
 }
 
-bool APlayableCharacter::ServerPutItemToStorage_Validate(AActor* HitActor)
+bool APlayableCharacter::ServerPutItemToStorage_Validate(AActor* HitActor, FVector ClientLocation, FRotator ClientRotation)
 {
-	return true;
+	return HitActor != nullptr;
 }
 
-void APlayableCharacter::PerformLineTrace(FHitResult& HitResult)
+void APlayableCharacter::PerformLineTrace(FHitResult& HitResult, FVector Location, FRotator Rotation)
 {
-	FVector Start = FirstPersonCamera->GetComponentLocation();
-	FVector ForwardVector = FirstPersonCamera->GetForwardVector();
+	FVector Start = Location;
+	FVector ForwardVector = Rotation.Vector();
 	FVector End = ((ForwardVector * InteractionDistance) + Start);
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(this);

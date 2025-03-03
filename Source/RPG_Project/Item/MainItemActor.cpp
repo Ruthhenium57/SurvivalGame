@@ -42,10 +42,10 @@ bool AMainItemActor::ServerInteract_Validate(ACharacter* Character)
 
 void AMainItemActor::MulticastHideItem_Implementation()
 {
-	FVector NewLocation(9999, 9999, 9999);
-	SetActorLocation(NewLocation);
 	SetActorHiddenInGame(true);
 	SetActorEnableCollision(false);
+	FVector NewLocation(9999, 9999, 9999);
+	SetActorLocation(NewLocation, false);
 }
 
 void AMainItemActor::BeginPlay()
