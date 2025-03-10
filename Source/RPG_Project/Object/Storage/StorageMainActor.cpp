@@ -35,8 +35,7 @@ void AStorageMainActor::HandleInteract(ACharacter* Character)
 	APlayableCharacter* PlayableCharacter = Cast<APlayableCharacter>(Character);
 	if (PlayableCharacter)
 	{
-		FItemInventorySlot StorageSlot;
-		InventoryComponent->FindSlotByClass(StorageItemClass, StorageSlot);
+		FItemInventorySlot StorageSlot = InventoryComponent->FindSlotByClass(StorageItemClass);
 		if (!StorageSlot.Items.IsEmpty())
 		{
 			if (AMainItemActor* Item = StorageSlot.Items.Last())
