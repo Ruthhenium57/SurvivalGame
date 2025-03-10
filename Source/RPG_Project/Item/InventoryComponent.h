@@ -6,7 +6,6 @@
 #include "Components/ActorComponent.h"
 #include "MainItemActor.h"
 #include "../UI/MainHUDWidget.h"
-#include "../ItemDataManager.h"
 #include "InventoryComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
@@ -22,15 +21,12 @@ struct FItemInventorySlot
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<class AMainItemActor> ItemClass;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<AMainItemActor*> Items;
 
-	bool operator==(const FItemInventorySlot& Slot) const
+	/*bool operator==(const FItemInventorySlot& Slot) const
 	{
 		return ItemClass == Slot.ItemClass && Items == Slot.Items;
-	}
+	}*/
 };
 
 UCLASS( ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -58,7 +54,7 @@ public:
 	bool AddItem(AMainItemActor* Item);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	bool RemoveItem(AMainItemActor* Item);
+	bool RemoveItem(AMainItemActor* Item, TSubclassOf<AMainItemActor> ItemClass);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void LogInventory() const;
@@ -70,24 +66,32 @@ public:
 	FOnItemRemovedDelegate OnItemRemoved;*/
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	bool FindSlotByClass(TSubclassOf<AMainItemActor> ItemClass, FItemInventorySlot& OutItemSlot);
+	FItemInventorySlot FindSlotByClass(TSubclassOf<AMainItemActor> ItemClass);
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 HowMuchFreeSpaceInSlot(TSubclassOf<AMainItemActor> ItemClass);
 
 private:
 	UFUNCTION()
 	void OnRep_Inventory();
 
-	UPROPERTY(ReplicatedUsing = OnRep_Inventory, EditAnywhere, Replicated, Category = "Inventory")
-	TArray<FItemInventorySlot> ItemsSlots;
+	UPROPERTY(EditAnywhere, Category = "Inventory")
+	TMap<FString, FItemInventorySlot> InventorySlots;
+
+	/*UPROPERTY(ReplicatedUsing = OnRep_Inventory, EditAnywhere, Replicated, Category = "Inventory")
+	TArray<FItemInventorySlot> ItemsSlots;*/
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerAddItem(AMainItemActor* Item);
 
 	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerRemoveItem(AMainItemActor* Item);
+	void ServerRemoveItem(AMainItemActor* Item, TSubclassOf<AMainItemActor> ItemClass);
 
+	UFUNCTION()
 	bool AddItemInternal(AMainItemActor* Item);
 
-	bool RemoveItemInternal(AMainItemActor* Item);
+	UFUNCTION()
+	bool RemoveItemInternal(AMainItemActor* Item, TSubclassOf<AMainItemActor> ItemClass);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastUpdateSlotWidget(FItemInventorySlot ItemSlot);

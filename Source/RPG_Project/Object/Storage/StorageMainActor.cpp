@@ -27,9 +27,7 @@ void AStorageMainActor::BeginPlay()
 
 void AStorageMainActor::Tick(float DeltaTime)
 {
-	FItemInventorySlot StorageSlot;
-	InventoryComponent->FindSlotByClass(StorageItemClass, StorageSlot);
-	TextRender->SetText(FText::FromString(FString::Printf(TEXT("Num Of Items : %d"), StorageSlot.Items.Num())));
+	
 }
 
 void AStorageMainActor::HandleInteract(ACharacter* Character)

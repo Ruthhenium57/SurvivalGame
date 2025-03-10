@@ -67,7 +67,7 @@ void AMainItemActor::BeginPlay()
 			Description = ItemData->ItemDescription;
 			Icon = ItemData->ItemImage;
 		}
-	}//
+	}
 }
 
 // Called every frame

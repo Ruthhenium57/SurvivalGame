@@ -14,7 +14,6 @@
 #include "InteractionInfoWidget.h"
 #include "InvenroryWidget.h"
 #include "GameHUD.h"
-#include "InvenroryWidget.h"
 #include "GameFramework/PlayerController.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -29,6 +28,7 @@ APlayableCharacter::APlayableCharacter()
 	PlayerStatsComp = CreateDefaultSubobject<UPlayerStatsComp>(TEXT("PlayerStatsComp"));
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 	InventoryComponent->SetIsReplicated(true);
+	CraftComponent = CreateDefaultSubobject<UCraftComponent>(TEXT("CraftComponent"));
 
 	DefaultWalkSpeed = 600.0f;
 	SprintSpeed = 1200.0f;
@@ -76,22 +76,7 @@ void APlayableCharacter::BeginPlay()
 void APlayableCharacter::InitializeWidget()
 {
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	if (PlayerController)
-	{
-		//AGameHUD* GameHUD = Cast<AGameHUD>(PlayerController->GetHUD());
-		//if (GameHUD && GameHUD->MainHUDWidget)
-		//{
-		//	MainHUDWidget = GameHUD->MainHUDWidget;
-		//	InventoryComponent->PlayerWidget = MainHUDWidget;
-		//	UE_LOG(LogTemp, Warning, TEXT("MainWidgetIsCreated"));
-		//}
-		//else
-		//{
-		//	UE_LOG(LogTemp, Warning, TEXT("HUD or MainHUDWidget is not ready yet, retrying..."));
-		//	GetWorld()->GetTimerManager().SetTimer(TimerHandle_InitWidget, this, &APlayableCharacter::InitializeWidget, 0.1f, false);
-		//}
-	}
-
+	
 	if (!MainHUDWidget && MainHUDWidgetClass)
 	{
 		MainHUDWidget = CreateWidget<UMainHUDWidget>(GetWorld(), MainHUDWidgetClass);
@@ -477,3 +462,12 @@ void APlayableCharacter::MulticastSetSprintSpeed_Implementation(float NewSpeed)
 		GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
 	}
 }
+
+void APlayableCharacter::CraftItem(TSubclassOf<AMainItemActor> Item)
+{
+	
+}
+
+
+
+

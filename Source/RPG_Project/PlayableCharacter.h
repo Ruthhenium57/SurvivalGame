@@ -7,6 +7,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Item/InventoryComponent.h"
+#include "Item/CraftComponent.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "InteractableInterface.h"
@@ -58,6 +59,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UInventoryComponent* InventoryComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UCraftComponent* CraftComponent;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Camera)
 	float BaseTurnRate;
@@ -134,4 +138,7 @@ public:
 	void ToggleInventory();
 
 	bool bIsInventoryHiden;
+
+	UFUNCTION(Category = "Craft")
+	void CraftItem(TSubclassOf<AMainItemActor> Item);
 };

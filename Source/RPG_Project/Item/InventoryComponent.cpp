@@ -22,7 +22,7 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(UInventoryComponent, ItemsSlots);
+	//DOREPLIFETIME(UInventoryComponent, InventorySlots);
 }
 
 
@@ -38,12 +38,7 @@ bool UInventoryComponent::AddItem(AMainItemActor* Item)
 		bool bSuccess = AddItemInternal(Item);
 		if (bSuccess)
 		{
-			FItemInventorySlot OutSlot;
-			bool bOutSlot = FindSlotByClass(Item->GetClass(), OutSlot);
-			if (bOutSlot)
-			{
-				MulticastUpdateSlotWidget(OutSlot);
-			}
+			MulticastUpdateSlotWidget(*InventorySlots.Find(Item->GetClass()->GetName()));
 		}
 		return bSuccess;
 	}
@@ -54,22 +49,20 @@ bool UInventoryComponent::AddItem(AMainItemActor* Item)
 	}
 }
 
-bool UInventoryComponent::RemoveItem(AMainItemActor* Item)
+bool UInventoryComponent::RemoveItem(AMainItemActor* Item, TSubclassOf<AMainItemActor> ItemClass)
 {
 	if (GetOwnerRole() == ROLE_Authority)
 	{
-		bool bSuccess = RemoveItemInternal(Item);
+		bool bSuccess = RemoveItemInternal(Item, ItemClass);
 		if (bSuccess)
 		{
-			FItemInventorySlot OutSlot;
-			FindSlotByClass(Item->GetClass(), OutSlot);
-			MulticastUpdateSlotWidget(OutSlot);
+			MulticastUpdateSlotWidget(*InventorySlots.Find(ItemClass->GetName()));
 		}
 		return bSuccess;
 	}
 	else
 	{
-		ServerRemoveItem(Item);
+		ServerRemoveItem(Item, ItemClass);
 		return false;
 	}
 }
@@ -79,21 +72,34 @@ void UInventoryComponent::LogInventory() const
 	
 }
 
-bool UInventoryComponent::FindSlotByClass(TSubclassOf<AMainItemActor> ItemClass, FItemInventorySlot& OutItemSlot)
+FItemInventorySlot UInventoryComponent::FindSlotByClass(TSubclassOf<AMainItemActor> ItemClass)
 {
-	for (FItemInventorySlot& ItemSlot : ItemsSlots)
+	FItemInventorySlot* Slot = InventorySlots.Find(ItemClass->GetName());
+	return *Slot;
+}
+
+int32 UInventoryComponent::HowMuchFreeSpaceInSlot(TSubclassOf<AMainItemActor> ItemClass)
+{
+	FItemData* ItemData = nullptr;
+	UDataTable* ItemDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Data/DT_Item.DT_Item")); // get data table
+
+	if (ItemDataTable)
 	{
-		if (ItemSlot.ItemClass == ItemClass)
+		ItemData = ItemDataTable->FindRow<FItemData>(FName(ItemClass->GetName().RightChop(7).LeftChop(2)), TEXT("")); // find row
+
+		if (ItemData)
 		{
-			OutItemSlot = ItemSlot;
-			return true;
+			FItemInventorySlot* Slot = InventorySlots.Find(ItemClass->GetName()); // find slot
+			if (Slot)
+			{
+				return ItemData->MaxQuantity - Slot->Items.Num(); // return free space
+			}
+			else
+			{
+				return ItemData->MaxQuantity; // return max quantity
+			}
 		}
 	}
-
-	static FItemInventorySlot EmptySlot;
-	EmptySlot.ItemClass = ItemClass;
-	OutItemSlot = EmptySlot;
-	return false;
 }
 
 void UInventoryComponent::OnRep_Inventory()
@@ -111,12 +117,12 @@ bool UInventoryComponent::ServerAddItem_Validate(AMainItemActor* Item)
 	return true;
 }
 
-void UInventoryComponent::ServerRemoveItem_Implementation(AMainItemActor* Item)
+void UInventoryComponent::ServerRemoveItem_Implementation(AMainItemActor* Item, TSubclassOf<AMainItemActor> ItemClass)
 {
-	RemoveItemInternal(Item);
+	RemoveItemInternal(Item, ItemClass);
 }
 
-bool UInventoryComponent::ServerRemoveItem_Validate(AMainItemActor* Item)
+bool UInventoryComponent::ServerRemoveItem_Validate(AMainItemActor* Item, TSubclassOf<AMainItemActor> ItemClass)
 {
 	return true;
 }
@@ -135,31 +141,23 @@ bool UInventoryComponent::AddItemInternal(AMainItemActor* Item)
 
 		if (ItemData)
 		{
-			if (!ItemsSlots.IsEmpty())
+			if (FItemInventorySlot* Slot = InventorySlots.Find(Item->GetClass()->GetName())) // If slot is available
 			{
-				for (FItemInventorySlot& Slot : ItemsSlots)
+				if (Slot->Items.Num() < ItemData->MaxQuantity) // if has enough space
 				{
-					if (Slot.ItemClass == Item->GetClass())
-					{
-						if (Slot.Items.Num() < ItemData->MaxQuantity)
-						{
-							Slot.Items.Add(Item);
-							UE_LOG(LogTemp, Display, TEXT("ItemAddedToOldSlot"));
-							return true;
-						}
-						else
-						{
-							UE_LOG(LogTemp, Error, TEXT("Not enough space"));
-							return false;
-						}
-					}
+					Slot->Items.Add(Item);						// add item
+					UE_LOG(LogTemp, Display, TEXT("ItemAddedToOldSlot"));
+					return true;
+				}
+				else
+				{
+					UE_LOG(LogTemp, Error, TEXT("Not enough space"));
+					return false;
 				}
 			}
-
 			FItemInventorySlot Slot;
-			Slot.ItemClass = Item->GetClass();
 			Slot.Items.Add(Item);
-			ItemsSlots.Add(Slot);
+			InventorySlots.Add(Item->GetClass()->GetName(), Slot); // add new element to map
 			UE_LOG(LogTemp, Display, TEXT("New slot is created"));
 			return true;
 		}
@@ -168,34 +166,41 @@ bool UInventoryComponent::AddItemInternal(AMainItemActor* Item)
 	return false;
 }
 
-bool UInventoryComponent::RemoveItemInternal(AMainItemActor* Item)
+bool UInventoryComponent::RemoveItemInternal(AMainItemActor* Item = nullptr, TSubclassOf<AMainItemActor> ItemClass = nullptr)
 {
 	if (Item)
 	{
-		if (!ItemsSlots.IsEmpty())
-		{
-			for (int32 i = 0; i < ItemsSlots.Num(); i++) // Loops for inventory
-			{
-				FItemInventorySlot& Slot = ItemsSlots[i];
+		ItemClass = Item->GetClass();
+	}
 
-				if (Slot.ItemClass == Item->GetClass()) // If has item
-				{
-					if (Slot.Items.Num() == 1) // If this last item in slot
-					{
-						ItemsSlots.RemoveAt(i); // Delete slot by i
-						UE_LOG(LogTemp, Display, TEXT("Slot is removed"));
-						return true;
-					}
-					else
-					{
-						Slot.Items.Remove(Item); // Delete slot by i
-						UE_LOG(LogTemp, Display, TEXT("Item removed from slot"));
-						return true;
-					}
-				}
+	if (!ItemClass)
+	{
+		return false; // return if no parameters were specified
+	}
+
+	if (FItemInventorySlot* Slot = InventorySlots.Find(ItemClass->GetName()))
+	{
+		if (Slot->Items.Num() == 1) // If this last item in slot
+		{
+			InventorySlots.Remove(ItemClass->GetName()); // remove slot
+			UE_LOG(LogTemp, Display, TEXT("Slot is removed"));
+			return true;
+		}
+		else
+		{
+			if (Item)
+			{
+				Slot->Items.Remove(Item); // remove item from slot
+				UE_LOG(LogTemp, Display, TEXT("Item removed from slot"));
+				return true;
+			}
+			else
+			{
+				Slot->Items.Remove(Slot->Items.Last()); // remove last item from slot
 			}
 		}
 	}
+
 	UE_LOG(LogTemp, Error, TEXT("Item not been removed"));
 	return false;
 }
@@ -208,7 +213,7 @@ void UInventoryComponent::MulticastUpdateSlotWidget_Implementation(FItemInventor
 		{
 			if (PlayerWidget)
 			{
-				PlayerWidget->InventoryWidget->UpdateSlotInfo(ItemSlot);
+				PlayerWidget->InventoryWidget->UpdateSlotInfo(ItemSlot); // update inventory widget
 				UE_LOG(LogTemp, Warning, TEXT("Inventory updated on local client"));
 			}
 		}
