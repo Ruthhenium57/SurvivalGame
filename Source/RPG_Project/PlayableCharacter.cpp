@@ -2,10 +2,6 @@
 
 
 #include "PlayableCharacter.h"
-#include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
-#include "InputMappingContext.h"
-#include "InputAction.h"
 #include "MainHUDWidget.h"
 #include "HealthBarWidget.h"
 #include "StaminaBarWidget.h"
@@ -19,7 +15,7 @@
 #include "Components/InputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "TimerManager.h"
-#include "Item/Used/FoodMedicine/CannedFood/ItemCannedFoodActor.h"
+#include "Craft/CraftingMenuWidget.h"
 
 APlayableCharacter::APlayableCharacter()
 {
@@ -43,7 +39,7 @@ APlayableCharacter::APlayableCharacter()
 	BaseLookUpRate = 45.0f;
 
 	InteractionDistance = 400.0f;
-	bIsInventoryHiden = true;
+	bIsInventoryHidden = true;
 }
 
 void APlayableCharacter::BeginPlay()
@@ -54,25 +50,9 @@ void APlayableCharacter::BeginPlay()
 
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle_InitWidget, this, &APlayableCharacter::InitializeWidget, 0.1f, false);
 
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	if (PlayerController)
-	{
-		AGameHUD* GameHUD = Cast<AGameHUD>(PlayerController->GetHUD());
-		if (GameHUD)
-		{
-			//MainHUDWidget = GameHUD->MainHUDWidget;
-		}
-	}
-
 	if (PlayerStatsComp)
 	{
 		PlayerStatsComp->OnStaminaEnd.AddDynamic(this, &APlayableCharacter::OnStaminaEnd);
-	}
-
-	if (InventoryComponent)
-	{
-		//InventoryComponent->OnItemAdded.AddDynamic(this, &APlayableCharacter::OnItemAdded);
-		//InventoryComponent->OnItemRemoved.AddDynamic(this, &APlayableCharacter::OnItemRemoved);
 	}
 }
 
@@ -88,6 +68,7 @@ void APlayableCharacter::InitializeWidget()
 			MainHUDWidget->AddToViewport();
 			InventoryComponent->PlayerWidget = MainHUDWidget;
 			MainHUDWidget->InventoryWidget->OwningPlayer = this;
+			MainHUDWidget->CraftingMenuWidget->OwningPlayer = this;
 		}
 		else
 		{
@@ -130,8 +111,7 @@ void APlayableCharacter::SetupPlayerInputComponent(UInputComponent * MainPlayerI
 	MainPlayerInput->BindAction("PutItemToStorage", IE_Pressed, this, &APlayableCharacter::PutItemToStorage);
 
 	MainPlayerInput->BindAction("ToggleInventory", IE_Pressed, this, &APlayableCharacter::ToggleInventory);
-
-	MainPlayerInput->BindAction("TestCraftItem", IE_Pressed, this, &APlayableCharacter::TestCraftItem);
+	MainPlayerInput->BindAction("ToggleCraftMenu", IE_Pressed, this, &APlayableCharacter::ToggleCraftMenu);
 }
 
 void APlayableCharacter::MoveForward(float Value)
@@ -187,20 +167,6 @@ void APlayableCharacter::OnStaminaEnd()
 	StopSprint();
 }
 
-void APlayableCharacter::SetWalkSpeed(float NewSpeed)
-{
-	DefaultWalkSpeed = NewSpeed;
-	if (!bIsSprinting)
-	{
-		GetCharacterMovement()->MaxWalkSpeed = DefaultWalkSpeed;
-	}
-}
-
-void APlayableCharacter::SetSprintSpeed(float NewSpeed)
-{
-	SprintSpeed = NewSpeed;
-}
-
 void APlayableCharacter::Sprint()
 {
 	if (PlayerStatsComp && PlayerStatsComp->CurrentStamina > 0)
@@ -240,7 +206,7 @@ void APlayableCharacter::UpdateHealthBar()
 {
 	if (PlayerStatsComp && MainHUDWidget)
 	{
-		float HealthPercentage = PlayerStatsComp->CurrentHealth / PlayerStatsComp->MaxHealth;
+		const float HealthPercentage = PlayerStatsComp->CurrentHealth / PlayerStatsComp->MaxHealth;
 		MainHUDWidget->HealthBarWidget->SetHealth(HealthPercentage);
 	}
 }
@@ -249,7 +215,7 @@ void APlayableCharacter::UpdateStaminaBar()
 {
 	if (PlayerStatsComp && MainHUDWidget)
 	{
-		float StaminaPercentage = PlayerStatsComp->CurrentStamina / PlayerStatsComp->MaxStamina;
+		const float StaminaPercentage = PlayerStatsComp->CurrentStamina / PlayerStatsComp->MaxStamina;
 		MainHUDWidget->StaminaBarWidget->SetStamina(StaminaPercentage);
 	}
 }
@@ -258,7 +224,7 @@ void APlayableCharacter::UpdateThirstBar()
 {
 	if (PlayerStatsComp && MainHUDWidget)
 	{
-		float ThirstPercentage = PlayerStatsComp->CurrentThirst / PlayerStatsComp->MaxThirst;
+		const float ThirstPercentage = PlayerStatsComp->CurrentThirst / PlayerStatsComp->MaxThirst;
 		MainHUDWidget->ThirstBarWidget->SetThirst(ThirstPercentage);
 	}
 }
@@ -267,7 +233,7 @@ void APlayableCharacter::UpdateHungerBar()
 {
 	if (PlayerStatsComp && MainHUDWidget)
 	{
-		float HungerPercentage = PlayerStatsComp->CurrentHunger / PlayerStatsComp->MaxHunger;
+		const float HungerPercentage = PlayerStatsComp->CurrentHunger / PlayerStatsComp->MaxHunger;
 		MainHUDWidget->HungerBarWidget->SetHunger(HungerPercentage);
 	}
 }
@@ -281,8 +247,7 @@ void APlayableCharacter::UpdateInteractInfo()
 		AActor* HitActor = HitResult.GetActor();
 		if (HitActor && HitActor->GetClass()->ImplementsInterface(UInteractableInterface::StaticClass()))
 		{
-			IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor);
-			if (Interactable)
+			if (IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor))
 			{
 				MainHUDWidget->InteractionInfoWidget->ShowInteractInfo(Interactable->InteractTextBlockName);
 				if (!Interactable->InteractTextBlockName2.IsEmpty())
@@ -294,17 +259,6 @@ void APlayableCharacter::UpdateInteractInfo()
 			}
 		}
 		MainHUDWidget->InteractionInfoWidget->HideInteractInfo();
-	}
-}
-
-void APlayableCharacter::TestCraftItem()
-{
-	static ConstructorHelpers::FClassFinder<AMainItemActor> RopeBP(TEXT("/Game/BP/Item/Resourse/BP_ItemRope.BP_ItemRope_C"));
-	if (RopeBP.Class != nullptr)
-	{
-		ItemToCraft = RopeBP.Class;
-		CraftComponent->CraftItem(ItemToCraft);
-		UE_LOG(LogTemp, Display, TEXT("APlayableCharacter: TestCraftItem is called"));
 	}
 }
 
@@ -396,21 +350,36 @@ void APlayableCharacter::ToggleInventory()
 {
 	if (MainHUDWidget && MainHUDWidget->InventoryWidget)
 	{
-		if (bIsInventoryHiden && MainHUDWidget->InventoryWidget->GetVisibility() == ESlateVisibility::Collapsed)
+		if (bIsInventoryHidden && MainHUDWidget->InventoryWidget->GetVisibility() == ESlateVisibility::Collapsed)
 		{
 			MainHUDWidget->InventoryWidget->SetVisibility(ESlateVisibility::Visible);
-			bIsInventoryHiden = false;
+			bIsInventoryHidden = false;
 		}
 		else
 		{
 			MainHUDWidget->InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
-			bIsInventoryHiden = true;
+			bIsInventoryHidden = true;
 		}
 	}
-	else
+	else UE_LOG(LogTemp, Display, TEXT("Inventory hasn't been spawned"));
+}
+
+void APlayableCharacter::ToggleCraftMenu()
+{
+	if (MainHUDWidget && MainHUDWidget->CraftingMenuWidget)
 	{
-		UE_LOG(LogTemp, Display, TEXT("Inventory hasn't been spawned"));
+		if (bIsCraftMenuHidden && MainHUDWidget->CraftingMenuWidget->GetVisibility() == ESlateVisibility::Collapsed)
+		{
+			MainHUDWidget->CraftingMenuWidget->SetVisibility(ESlateVisibility::Visible);
+			bIsCraftMenuHidden = false;
+		}
+		else
+		{
+			MainHUDWidget->CraftingMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+			bIsCraftMenuHidden = true;
+		}
 	}
+	else UE_LOG(LogTemp, Display, TEXT("Craft menu hasn't been spawned"));
 }
 
 void APlayableCharacter::ServerPutItemToStorage_Implementation(AActor* HitActor, FVector ClientLocation, FRotator ClientRotation)

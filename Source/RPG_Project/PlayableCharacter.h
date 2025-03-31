@@ -4,13 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "MainCharacter.h"
-#include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Item/InventoryComponent.h"
 #include "Item/CraftComponent.h"
-#include "GameFramework/Character.h"
-#include "InputActionValue.h"
-#include "InteractableInterface.h"
 #include "PlayerStatsComp.h"
 #include "PlayableCharacter.generated.h"
 
@@ -80,12 +76,6 @@ public:
 	void OnStaminaEnd();
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
-	void SetWalkSpeed(float NewSpeed);
-
-	UFUNCTION(BlueprintCallable, Category = "Movement")
-	void SetSprintSpeed(float NewSpeed);
-
-	UFUNCTION(BlueprintCallable, Category = "Movement")
 	void Sprint();
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
@@ -107,9 +97,6 @@ public:
 	void UpdateHungerBar();
 	UFUNCTION()
 	void UpdateInteractInfo();
-
-	UFUNCTION(BlueprintCallable, Category = "Craft")
-	void TestCraftItem();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Craft")
 	TSubclassOf<AMainItemActor> ItemToCraft;
@@ -143,7 +130,14 @@ public:
 	UFUNCTION()
 	void ToggleInventory();
 
-	bool bIsInventoryHiden;
+	UPROPERTY()
+	bool bIsInventoryHidden;
+
+	UFUNCTION()
+	void ToggleCraftMenu();
+
+	UPROPERTY()
+	bool bIsCraftMenuHidden;
 
 	UFUNCTION(Category = "Craft")
 	void CraftItem(TSubclassOf<AMainItemActor> Item);

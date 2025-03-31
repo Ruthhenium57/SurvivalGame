@@ -5,8 +5,11 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "CategoryButtonWidget.h"
+#include "ItemImageSlotWidget.h"
+#include "RPG_Project/PlayableCharacter.h"
 #include "CraftingMenuWidget.generated.h"
 
+class UItemImageSlotWidget;
 /**
  * 
  */
@@ -14,10 +17,8 @@ UCLASS()
 class RPG_PROJECT_API UCraftingMenuWidget : public UUserWidget
 {
 	GENERATED_BODY()
-	
-public:
 
-protected:
+public:
 	UPROPERTY(meta = (BindWidget))
 	class UVerticalBox* CategoriesBox;
 
@@ -29,4 +30,19 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UCategoryButtonWidget> CategoryButton;
+
+	UPROPERTY()
+	APlayableCharacter* OwningPlayer;
+
+	UPROPERTY()
+	TMap<TSubclassOf<AMainItemActor>, UItemImageSlotWidget*> GridItemsCache;
+
+	UFUNCTION()
+	void CreateAllItems();
+
+	UFUNCTION()
+	void OnGridItemClicked(TSubclassOf<AMainItemActor> ItemClass);
+
+	UFUNCTION()
+	void FilterByClass(TSubclassOf<AMainItemActor> ItemClass);
 };

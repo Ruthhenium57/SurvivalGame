@@ -10,16 +10,16 @@ void UItemImageSlotWidget::NativeConstruct()
 	Button->OnClicked.AddDynamic(this, &UItemImageSlotWidget::OnButtonClicked);
 }
 
-void UItemImageSlotWidget::UpdateImageInfo(UTexture2D* Image)
+void UItemImageSlotWidget::UpdateImageInfo(FItemData ItemData)
 {
-	if (Image)
+	if (ItemData.ItemImage)
 	{
-		ItemImage = Image;
+		ItemImage = ItemData.ItemImage;
 	}
 }
 
 void UItemImageSlotWidget::OnButtonClicked()
 {
-
+	OnClickedDelegate.Broadcast(ItemClass);
 }
 

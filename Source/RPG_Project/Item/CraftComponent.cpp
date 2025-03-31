@@ -51,8 +51,7 @@ bool UCraftComponent::CraftItem(TSubclassOf<AMainItemActor> ItemClass)
 FCraftData UCraftComponent::GetCraftItemData(TSubclassOf<AMainItemActor> ItemClass)
 {
 	if (!ItemClass) return FCraftData();
-	const FCraftData* CraftData = CraftDataCache.Find(ItemClass);
-	if (CraftData) return *CraftData;
+	if (const FCraftData* CraftData = CraftDataCache.Find(ItemClass)) return *CraftData;
 	UE_LOG(LogTemp, Warning, TEXT("CraftComponent::GetCraftItemData: No craft item data found for class %s"), *ItemClass->GetName());
 	return FCraftData();
 }
@@ -64,13 +63,13 @@ bool UCraftComponent::CraftItemInternal(TSubclassOf<AMainItemActor> ItemClass)
 		FCraftData Data = GetCraftItemData(ItemClass);
 		if (InventoryComponent && Data.ItemToCraft)
 		{
-			if (InventoryComponent->HowMuchFreeSpaceInSlot(Data.ItemToCraft) >= Data.Quantity) // If have free space to new item
+			if (InventoryComponent->HowMuchFreeSpaceInSlot(Data.ItemToCraft) >= Data.Quantity) // If you have free space to new item
 			{
 				TArray<TSubclassOf<AMainItemActor>> ChangedKeys;
 				for (const auto& Material : Data.Materials) // loop for materials
 				{
 					FItemInventorySlot Slot = InventoryComponent->FindSlotByClass(Material.ItemClass);  // find material slot 
-					if (Slot.Items.Num() < Material.Quantity) // if have enough materials to claft
+					if (Slot.Items.Num() < Material.Quantity) // if you have enough materials to craft
 					{ 
 						UE_LOG(LogTemp, Error, TEXT("UCraftComponent: Player has no enough comp of type: %s"), *Material.ItemClass->GetClass()->GetName()); 
 						return false; 

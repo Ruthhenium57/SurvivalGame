@@ -5,6 +5,19 @@
 #include "CoreMinimal.h"
 #include "ItemData.generated.h"
 
+
+UENUM(BlueprintType)
+enum class EItemType : uint8
+{
+	Weapon			UMETA(DisplayName = "Weapon"),
+	Tool			UMETA(DisplayName = "Tool"),
+	Medicine		UMETA(DisplayName = "Medicine"),
+	Food			UMETA(DisplayName = "Food"),
+	Component		UMETA(DisplayName = "Component"),
+	Object			UMETA(DisplayName = "Object")
+};
+
+
 USTRUCT(BlueprintType)
 struct RPG_PROJECT_API FItemData: public FTableRowBase
 {
@@ -12,7 +25,7 @@ struct RPG_PROJECT_API FItemData: public FTableRowBase
 
 	FItemData()
 		: MaxQuantity(1)
-		, MaxQuantityWithPouch(1)
+		, ItemType(EItemType::Component)
 		, ItemImage(nullptr)
 	{}
 
@@ -28,7 +41,7 @@ public:
 	int32 MaxQuantity;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	int32 MaxQuantityWithPouch;
+	EItemType ItemType;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	TSubclassOf<class AMainItemActor> ItemClass;

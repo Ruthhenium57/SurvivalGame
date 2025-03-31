@@ -45,6 +45,9 @@ public:
 	UPROPERTY()
 	UInventoryComponent* InventoryComponent;
 
+	UPROPERTY()
+	TMap<TSubclassOf<AMainItemActor>, FCraftData> CraftDataCache;
+
 private:
 	UFUNCTION()
 	bool CraftItemInternal(TSubclassOf<AMainItemActor> ItemClass);
@@ -54,9 +57,6 @@ private:
 
 	UFUNCTION()
 	void CacheCraftDT();
-
-	UPROPERTY()
-	TMap<TSubclassOf<AMainItemActor>, FCraftData> CraftDataCache;
 	
 	UPROPERTY()
 	UDataTable* CraftDataTable;

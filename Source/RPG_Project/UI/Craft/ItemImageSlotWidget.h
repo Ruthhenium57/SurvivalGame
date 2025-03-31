@@ -21,13 +21,13 @@ public:
 	virtual void NativeConstruct() override;
 
 	UFUNCTION(BlueprintCallable, Category = "UI")
-	void UpdateImageInfo(UTexture2D* Image);
+	void UpdateImageInfo(FItemData ItemData);
 
 	UFUNCTION()
 	void OnButtonClicked();
 	
 	UPROPERTY(BlueprintAssignable)
-	FOnClickedOnItemImage OnClickedOnItemImage;
+	FOnClickedOnItemImage OnClickedDelegate;
 
 protected:
 	UPROPERTY(meta = (BindWidget))
