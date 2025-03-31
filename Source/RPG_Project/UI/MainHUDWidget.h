@@ -32,4 +32,7 @@ public:
 
     UPROPERTY(meta = (BindWidget))
     class UInvenroryWidget* InventoryWidget;
+
+    UPROPERTY(meta = (BindWidget))
+    class UCraftingMenuWidget* CraftingMenuWidget;
 };

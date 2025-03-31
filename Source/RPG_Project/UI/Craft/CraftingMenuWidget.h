@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "CategoryButtonWidget.h"
 #include "CraftingMenuWidget.generated.h"
 
 /**

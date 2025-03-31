@@ -7,7 +7,7 @@
 #include "MainItemActor.h"
 #include "ItemImageSlotWidget.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(OnClickedOnItemImage, TSubclassOf<AMainItemActor>, ItemClass);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnClickedOnItemImage, TSubclassOf<AMainItemActor>, ItemClass);
 /**
  * 
  */
