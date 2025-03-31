@@ -108,6 +108,12 @@ public:
 	UFUNCTION()
 	void UpdateInteractInfo();
 
+	UFUNCTION(BlueprintCallable, Category = "Craft")
+	void TestCraftItem();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Craft")
+	TSubclassOf<AMainItemActor> ItemToCraft;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
 	float NeedStaminaToJump;
 

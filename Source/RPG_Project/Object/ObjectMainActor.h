@@ -28,11 +28,13 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION()
 	virtual void Interact(ACharacter* Character) override;
 	
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerInteract(ACharacter* Character);
 
+	UFUNCTION()
 	virtual void HandleInteract(ACharacter* Character);
 
 public:

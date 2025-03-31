@@ -13,6 +13,7 @@
 #include "ThirstBarWidget.h"
 #include "InteractionInfoWidget.h"
 #include "InvenroryWidget.h"
+#include "Item/Resource/Rope/ItemRopeActor.h"
 #include "GameHUD.h"
 #include "GameFramework/PlayerController.h"
 #include "Components/InputComponent.h"
@@ -29,6 +30,8 @@ APlayableCharacter::APlayableCharacter()
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 	InventoryComponent->SetIsReplicated(true);
 	CraftComponent = CreateDefaultSubobject<UCraftComponent>(TEXT("CraftComponent"));
+	CraftComponent->CraftType = ECraftType::Hand;
+	CraftComponent->InventoryComponent = InventoryComponent;
 
 	DefaultWalkSpeed = 600.0f;
 	SprintSpeed = 1200.0f;
@@ -84,7 +87,7 @@ void APlayableCharacter::InitializeWidget()
 		{
 			MainHUDWidget->AddToViewport();
 			InventoryComponent->PlayerWidget = MainHUDWidget;
-			UE_LOG(LogTemp, Warning, TEXT("PlayerWidget initialized!"));
+			MainHUDWidget->InventoryWidget->OwningPlayer = this;
 		}
 		else
 		{
@@ -127,6 +130,8 @@ void APlayableCharacter::SetupPlayerInputComponent(UInputComponent * MainPlayerI
 	MainPlayerInput->BindAction("PutItemToStorage", IE_Pressed, this, &APlayableCharacter::PutItemToStorage);
 
 	MainPlayerInput->BindAction("ToggleInventory", IE_Pressed, this, &APlayableCharacter::ToggleInventory);
+
+	MainPlayerInput->BindAction("TestCraftItem", IE_Pressed, this, &APlayableCharacter::TestCraftItem);
 }
 
 void APlayableCharacter::MoveForward(float Value)
@@ -289,6 +294,17 @@ void APlayableCharacter::UpdateInteractInfo()
 			}
 		}
 		MainHUDWidget->InteractionInfoWidget->HideInteractInfo();
+	}
+}
+
+void APlayableCharacter::TestCraftItem()
+{
+	static ConstructorHelpers::FClassFinder<AMainItemActor> RopeBP(TEXT("/Game/BP/Item/Resourse/BP_ItemRope.BP_ItemRope_C"));
+	if (RopeBP.Class != nullptr)
+	{
+		ItemToCraft = RopeBP.Class;
+		CraftComponent->CraftItem(ItemToCraft);
+		UE_LOG(LogTemp, Display, TEXT("APlayableCharacter: TestCraftItem is called"));
 	}
 }
 

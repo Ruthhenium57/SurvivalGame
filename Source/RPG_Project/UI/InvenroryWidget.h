@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "../Item/InventoryComponent.h"
 #include "ItemSlotWidget.h"
+#include "../PlayableCharacter.h"
 #include "InvenroryWidget.generated.h"
 
 /**
@@ -17,21 +18,29 @@ class RPG_PROJECT_API UInvenroryWidget : public UUserWidget
 	GENERATED_BODY()
 	
 public:
+	void Construct();
+
 	UFUNCTION(BlueprintCallable, Category = "UI")
-	void UpdateSlotInfo(FItemInventorySlot ItemSlot);
+	void UpdateSlotInfo(TSubclassOf<AMainItemActor> ItemClass);
 
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void UpdateInventory(TArray<FItemInventorySlot> ItemSlots);
 
 	UFUNCTION(BlueprintCallable, Category = "UI")
-	void AddNewSlot(FItemInventorySlot ItemSlot);
+	void AddNewSlot(TSubclassOf<AMainItemActor> ItemClass);
 
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void RemoveSlot(TSubclassOf<AMainItemActor> ItemClass);
 
+	UPROPERTY()
+	APlayableCharacter* OwningPlayer;
+
 protected:
 	UPROPERTY(meta = (BindWidget))
 	class UScrollBox* InventoryList;
+
+	UPROPERTY()
+	TMap<FString, UItemSlotWidget*> ItemSlotWidgets;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UItemSlotWidget> ItemWidgetClass;

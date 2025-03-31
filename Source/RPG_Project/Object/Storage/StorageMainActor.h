@@ -22,10 +22,15 @@ public:
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
+
 	void HandleInteract(ACharacter* Character) override;
 
+	UFUNCTION()
 	void PutItemToStorage(ACharacter* Character) override;
-	void HandlePutItemToStorage(ACharacter* Character);
+
+	UFUNCTION()
+	void PutItemToStorageInternal(ACharacter* Character);
+
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerPutItemToStorage(ACharacter* Character);
 

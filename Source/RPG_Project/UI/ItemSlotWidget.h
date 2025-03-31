@@ -16,7 +16,7 @@ class RPG_PROJECT_API UItemSlotWidget : public UUserWidget
 	
 public:
 	UFUNCTION(BlueprintCallable, Category = "UI")
-	void UpdateItemInfo(FItemInventorySlot ItemSlot);
+	void UpdateItemInfo(TSubclassOf<AMainItemActor> ItemClass, int32 Count);
 
 protected:
 	UPROPERTY(meta = (BindWidget))

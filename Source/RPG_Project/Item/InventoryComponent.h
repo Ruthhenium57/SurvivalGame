@@ -9,8 +9,6 @@
 #include "InventoryComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
-//DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemAddedDelegate, bool, bSuccess, AMainItemActor*, Item);
-//DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemRemovedDelegate, bool, bSuccess, AMainItemActor*, Item);
 
 USTRUCT(BlueprintType)
 
@@ -22,11 +20,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<AMainItemActor*> Items;
-
-	/*bool operator==(const FItemInventorySlot& Slot) const
-	{
-		return ItemClass == Slot.ItemClass && Items == Slot.Items;
-	}*/
 };
 
 UCLASS( ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -54,16 +47,10 @@ public:
 	bool AddItem(AMainItemActor* Item);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	bool RemoveItem(AMainItemActor* Item, TSubclassOf<AMainItemActor> ItemClass);
+	bool RemoveItem(AMainItemActor* Item = nullptr, TSubclassOf<AMainItemActor> ItemClass = nullptr, bool DestroyAfretRemoving = false);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void LogInventory() const;
-
-	/*UPROPERTY(BlueprintAssignable, Category = "Event")
-	FOnItemAddedDelegate OnItemAdded;
-
-	UPROPERTY(BlueprintAssignable, Category = "Event")
-	FOnItemRemovedDelegate OnItemRemoved;*/
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	FItemInventorySlot FindSlotByClass(TSubclassOf<AMainItemActor> ItemClass);
@@ -71,30 +58,42 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	int32 HowMuchFreeSpaceInSlot(TSubclassOf<AMainItemActor> ItemClass);
 
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	const TMap<TSubclassOf<AMainItemActor>, FItemInventorySlot> GetInventoryItems();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastUpdateSlotWidget(TSubclassOf<AMainItemActor> ItemClass);
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastUpdateSpecificSlots(const TArray<TSubclassOf<AMainItemActor>>& ChangedKeys);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory")
+	UDataTable* ItemDataTable;
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	FItemData GetItemDataFromTable(TSubclassOf<AMainItemActor> ItemClass);
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void CacheItemDataTable();
+
 private:
-	UFUNCTION()
-	void OnRep_Inventory();
+	UPROPERTY()
+	TMap<TSubclassOf<AMainItemActor>, FItemInventorySlot> InventorySlots;
 
-	UPROPERTY(EditAnywhere, Category = "Inventory")
-	TMap<FString, FItemInventorySlot> InventorySlots;
-
-	/*UPROPERTY(ReplicatedUsing = OnRep_Inventory, EditAnywhere, Replicated, Category = "Inventory")
-	TArray<FItemInventorySlot> ItemsSlots;*/
+	UPROPERTY()
+	TMap<TSubclassOf<AMainItemActor>, FItemData> ItemDataCache;
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerAddItem(AMainItemActor* Item);
 
 	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerRemoveItem(AMainItemActor* Item, TSubclassOf<AMainItemActor> ItemClass);
+	void ServerRemoveItem(AMainItemActor* Item, TSubclassOf<AMainItemActor> ItemClass, bool DestroyAfretRemoving);
 
 	UFUNCTION()
 	bool AddItemInternal(AMainItemActor* Item);
 
 	UFUNCTION()
-	bool RemoveItemInternal(AMainItemActor* Item, TSubclassOf<AMainItemActor> ItemClass);
-
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastUpdateSlotWidget(FItemInventorySlot ItemSlot);
+	bool RemoveItemInternal(AMainItemActor* Item = nullptr, TSubclassOf<AMainItemActor> ItemClass = nullptr, bool DestroyAfretRemoving = false);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastRemoveSlotWidget(TSubclassOf<AMainItemActor> ItemClass);

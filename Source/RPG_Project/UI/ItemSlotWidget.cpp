@@ -7,18 +7,18 @@
 #include "InventoryComponent.h"
 
 
-void UItemSlotWidget::UpdateItemInfo(FItemInventorySlot ItemSlot)
+void UItemSlotWidget::UpdateItemInfo(TSubclassOf<AMainItemActor> ItemClass, int32 Count)
 {
 	FItemData* ItemData = nullptr;
 	UDataTable* ItemDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Data/DT_Item.DT_Item"));
 	if (ItemDataTable)
 	{
-		FName RowName = FName(ItemSlot.ItemClass->GetName().RightChop(7).LeftChop(2));
+		FName RowName = FName(ItemClass->GetName().RightChop(7).LeftChop(2));
 		ItemData = ItemDataTable->FindRow<FItemData>(RowName, TEXT(""));
 		if (ItemData)
 		{
 			ItemName->SetText(FText::FromString(ItemData->ItemName));
-			ItemQuantity->SetText(FText::AsNumber(ItemSlot.Items.Num()));
+			ItemQuantity->SetText(FText::AsNumber(Count));
 		}
 	}
 }

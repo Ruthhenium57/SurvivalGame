@@ -44,7 +44,7 @@ void AMainItemActor::MulticastHideItem_Implementation()
 {
 	SetActorHiddenInGame(true);
 	SetActorEnableCollision(false);
-	FVector NewLocation(9999, 9999, 9999);
+	FVector NewLocation(999999, 999999, 999999);
 	SetActorLocation(NewLocation, false);
 }
 

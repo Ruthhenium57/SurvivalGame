@@ -5,28 +5,35 @@
 #include "Components/ScrollBox.h"
 #include "Components/TextBlock.h"
 
-void UInvenroryWidget::UpdateSlotInfo(FItemInventorySlot ItemSlot)
+void UInvenroryWidget::Construct()
 {
-	if (!ItemSlot.Items.IsEmpty())
+	Super::Construct();
+}
+
+void UInvenroryWidget::UpdateSlotInfo(TSubclassOf<AMainItemActor> ItemClass)
+{
+	if (ItemClass && OwningPlayer)
 	{
-		for (UWidget* Widget : InventoryList->GetAllChildren())
+		FItemInventorySlot ItemSlot = OwningPlayer->InventoryComponent->FindSlotByClass(ItemClass);  // find slot in player
+		if (!ItemSlot.Items.IsEmpty())
 		{
-			if (Widget->GetName() == ItemSlot.ItemClass->GetName())
+			UItemSlotWidget** ItemWidgetPtr = ItemSlotWidgets.Find(ItemClass->GetName());	// find slot widget in map
+			if (ItemWidgetPtr)
 			{
-				UItemSlotWidget* ItemWidget = Cast<UItemSlotWidget>(Widget);
-				if (ItemWidget)
-				{
-					ItemWidget->UpdateItemInfo(ItemSlot);
-					UE_LOG(LogTemp, Display, TEXT("Widget slot info updated"));
-					return;
-				}
+				UItemSlotWidget* ItemWidget = *ItemWidgetPtr;
+				ItemWidget->UpdateItemInfo(ItemClass, ItemSlot.Items.Num());	// update slot info
+				UE_LOG(LogTemp, Display, TEXT("UInventoryWidget: Widget slot info updated"));
+				return;
+			}
+			else
+			{
+				AddNewSlot(ItemClass);	// add slot if is no
 			}
 		}
-		AddNewSlot(ItemSlot);
-	}
-	else
-	{
-		RemoveSlot(ItemSlot.ItemClass);
+		else
+		{
+			RemoveSlot(ItemClass);  // remove slot if is empty
+		}
 	}
 }
 
@@ -35,28 +42,29 @@ void UInvenroryWidget::UpdateInventory(TArray<FItemInventorySlot> ItemSlots)
 	
 }
 
-void UInvenroryWidget::AddNewSlot(FItemInventorySlot ItemSlot)
+void UInvenroryWidget::AddNewSlot(TSubclassOf<AMainItemActor> ItemClass)
 {
-	if (!ItemSlot.Items.IsEmpty())
+	if (ItemClass)
 	{
-		if (UItemSlotWidget* Widget = CreateWidget<UItemSlotWidget>(this, ItemWidgetClass, FName(ItemSlot.ItemClass->GetName())))
+		if (UItemSlotWidget* Widget = CreateWidget<UItemSlotWidget>(this, ItemWidgetClass, FName(ItemClass->GetName()))) // create widget slot
 		{
-			InventoryList->AddChild(Widget);
-			Widget->UpdateItemInfo(ItemSlot);
-			UE_LOG(LogTemp, Display, TEXT("NewSlotAddedToWidget"));
+			ItemSlotWidgets.Add(ItemClass->GetName(), Widget); // add to map
+			InventoryList->AddChild(Widget);   // add to widget slot list
+			Widget->UpdateItemInfo(ItemClass, OwningPlayer->InventoryComponent->FindSlotByClass(ItemClass).Items.Num());	// update slot info
+			UE_LOG(LogTemp, Display, TEXT("UInventoryWidget: NewSlotAddedToWidget"));
 		}
 	}
 }
 
 void UInvenroryWidget::RemoveSlot(TSubclassOf<AMainItemActor> ItemClass)
 {
-	for (UWidget* Widget : InventoryList->GetAllChildren())
+	UItemSlotWidget** WidgetPtr = ItemSlotWidgets.Find(ItemClass->GetName());	// find widget slot in list
+	if (WidgetPtr)
 	{
-		if (Widget->GetName() == ItemClass->GetName())
-		{
-			InventoryList->RemoveChild(Widget);
-			UE_LOG(LogTemp, Display, TEXT("SlotRemovedFromWidget"));
-		}
+		UItemSlotWidget* Widget = *WidgetPtr;
+		InventoryList->RemoveChild(Widget);		// remove widget
+		ItemSlotWidgets.Remove(ItemClass->GetName());	// remove from map
+		UE_LOG(LogTemp, Display, TEXT("UInventoryWidget: SlotRemovedFromWidget"));
 	}
 }
 

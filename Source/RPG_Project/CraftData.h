@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "MainItemActor.h"
 #include "CraftData.generated.h"
 
 /**
@@ -21,7 +22,7 @@ public:
 	TSubclassOf<class AMainItemActor> ItemClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Material")
-	int32 Quantity;
+	int32 Quantity = 1;
 };
 
 USTRUCT(BlueprintType)
@@ -33,11 +34,11 @@ struct RPG_PROJECT_API FCraftData : public FTableRowBase
 
 public:
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Item")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	TSubclassOf<class AMainItemActor> ItemToCraft;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	int32 Quantity;
+	int32 Quantity = 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	TArray<FMaterialData> Materials;

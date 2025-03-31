@@ -5,7 +5,15 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "InventoryComponent.h"
+#include "../CraftData.h"
 #include "CraftComponent.generated.h"
+
+UENUM(BlueprintType)
+enum class ECraftType : uint8
+{
+	Hand			UMETA(DisplayName = "Hand"),
+	Workbench		UMETA(DisplayName = "Workbench")
+};
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -26,11 +34,30 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Craft")
+	bool CraftItem(TSubclassOf<AMainItemActor> ItemClass);
+
+	UFUNCTION()
+	FCraftData GetCraftItemData(TSubclassOf<AMainItemActor> ItemClass);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Craft")
+	ECraftType CraftType;
+
+	UPROPERTY()
+	UInventoryComponent* InventoryComponent;
+
+private:
+	UFUNCTION()
 	bool CraftItemInternal(TSubclassOf<AMainItemActor> ItemClass);
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Craft")
-	UDataTable* CraftDataTable;
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerCraftItem(TSubclassOf<AMainItemActor> ItemClass);
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UInventoryComponent* InventoryComponent;
+	UFUNCTION()
+	void CacheCraftDT();
+
+	UPROPERTY()
+	TMap<TSubclassOf<AMainItemActor>, FCraftData> CraftDataCache;
+	
+	UPROPERTY()
+	UDataTable* CraftDataTable;
 };
