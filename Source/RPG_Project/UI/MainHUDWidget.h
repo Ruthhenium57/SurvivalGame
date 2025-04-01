@@ -31,7 +31,7 @@ public:
     class UInteractionInfoWidget* InteractionInfoWidget;
 
     UPROPERTY(meta = (BindWidget))
-    class UInvenroryWidget* InventoryWidget;
+    class UInventoryWidget* InventoryWidget;
 
     UPROPERTY(meta = (BindWidget))
     class UCraftingMenuWidget* CraftingMenuWidget;

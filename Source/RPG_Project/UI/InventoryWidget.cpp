@@ -1,16 +1,16 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "InvenroryWidget.h"
+#include "InventoryWidget.h"
 #include "Components/ScrollBox.h"
 #include "Components/TextBlock.h"
 
-void UInvenroryWidget::Construct()
+void UInventoryWidget::Construct()
 {
 	Super::Construct();
 }
 
-void UInvenroryWidget::UpdateSlotInfo(TSubclassOf<AMainItemActor> ItemClass)
+void UInventoryWidget::UpdateSlotInfo(TSubclassOf<AMainItemActor> ItemClass)
 {
 	if (ItemClass && OwningPlayer)
 	{
@@ -37,12 +37,12 @@ void UInvenroryWidget::UpdateSlotInfo(TSubclassOf<AMainItemActor> ItemClass)
 	}
 }
 
-void UInvenroryWidget::UpdateInventory(TArray<FItemInventorySlot> ItemSlots)
+void UInventoryWidget::UpdateInventory(TArray<FItemInventorySlot> ItemSlots)
 {
 	
 }
 
-void UInvenroryWidget::AddNewSlot(TSubclassOf<AMainItemActor> ItemClass)
+void UInventoryWidget::AddNewSlot(TSubclassOf<AMainItemActor> ItemClass)
 {
 	if (ItemClass)
 	{
@@ -56,7 +56,7 @@ void UInvenroryWidget::AddNewSlot(TSubclassOf<AMainItemActor> ItemClass)
 	}
 }
 
-void UInvenroryWidget::RemoveSlot(TSubclassOf<AMainItemActor> ItemClass)
+void UInventoryWidget::RemoveSlot(TSubclassOf<AMainItemActor> ItemClass)
 {
 	UItemSlotWidget** WidgetPtr = ItemSlotWidgets.Find(ItemClass->GetName());	// find widget slot in list
 	if (WidgetPtr)

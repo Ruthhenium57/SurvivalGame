@@ -8,7 +8,7 @@
 #include "HungerBarWidget.h"
 #include "ThirstBarWidget.h"
 #include "InteractionInfoWidget.h"
-#include "InvenroryWidget.h"
+#include "InventoryWidget.h"
 #include "Item/Resource/Rope/ItemRopeActor.h"
 #include "GameHUD.h"
 #include "GameFramework/PlayerController.h"

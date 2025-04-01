@@ -7,13 +7,13 @@
 #include "../Item/InventoryComponent.h"
 #include "ItemSlotWidget.h"
 #include "../PlayableCharacter.h"
-#include "InvenroryWidget.generated.h"
+#include "InventoryWidget.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class RPG_PROJECT_API UInvenroryWidget : public UUserWidget
+class RPG_PROJECT_API UInventoryWidget : public UUserWidget
 {
 	GENERATED_BODY()
 	

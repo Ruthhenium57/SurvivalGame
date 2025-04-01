@@ -5,9 +5,15 @@
 
 #include "Components/TextBlock.h"
 
+void UCategoryButtonWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+    ItemCategory = EItemType::None;
+}
+
 void UCategoryButtonWidget::OnButtonClicked()
 {
-    OnCategorySelected.Broadcast(this, ItemCategory);
+    OnCategorySelected.Broadcast(ItemCategory);
 }
 
 void UCategoryButtonWidget::UpdateWidgetData()

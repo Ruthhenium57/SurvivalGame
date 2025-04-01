@@ -4,7 +4,7 @@
 #include "InventoryComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
-#include "InvenroryWidget.h"
+#include "InventoryWidget.h"
 #include "Engine/DataTable.h"
 
 UInventoryComponent::UInventoryComponent()

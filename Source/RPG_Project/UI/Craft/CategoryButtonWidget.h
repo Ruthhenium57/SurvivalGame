@@ -7,7 +7,7 @@
 #include "RPG_Project/ItemData.h"
 #include "CategoryButtonWidget.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCategorySelectedDelegate, UWidget*, CategoryWidget, EItemType, ItemType);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCategorySelectedDelegate, const EItemType, ItemType);
 
 /**
  * 
@@ -18,6 +18,8 @@ class RPG_PROJECT_API UCategoryButtonWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	virtual void NativeConstruct() override;
+
 	UFUNCTION()
 	void OnButtonClicked();
 

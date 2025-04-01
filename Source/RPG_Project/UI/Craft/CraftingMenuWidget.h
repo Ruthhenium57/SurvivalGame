@@ -19,6 +19,8 @@ class RPG_PROJECT_API UCraftingMenuWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	virtual void NativeConstruct() override;
+
 	UPROPERTY(meta = (BindWidget))
 	class UVerticalBox* CategoriesBox;
 
@@ -37,12 +39,24 @@ public:
 	UPROPERTY()
 	TMap<TSubclassOf<AMainItemActor>, UItemImageSlotWidget*> GridItemsCache;
 
+	UPROPERTY()
+	TArray<EItemType> Categories;
+
+	UPROPERTY()
+	EItemType CurrentCategory;
+
 	UFUNCTION()
-	void CreateAllItems();
+	void InitializeAllItems();
+
+	UFUNCTION()
+	void InitializeCategories();
 
 	UFUNCTION()
 	void OnGridItemClicked(TSubclassOf<AMainItemActor> ItemClass);
 
 	UFUNCTION()
-	void FilterByClass(TSubclassOf<AMainItemActor> ItemClass);
+	void FilterGridByCategory(const EItemType Category);
+
+	UFUNCTION()
+	void SelectCategory(const EItemType Category);
 };
