@@ -45,6 +45,12 @@ public:
 	UPROPERTY()
 	EItemType CurrentCategory;
 
+	UPROPERTY()
+	FTimerHandle InitializeRestartTimerHandle;
+
+	UFUNCTION()
+	void InitializeAll();
+
 	UFUNCTION()
 	void InitializeAllItems();
 
@@ -52,7 +58,7 @@ public:
 	void InitializeCategories();
 
 	UFUNCTION()
-	void OnGridItemClicked(TSubclassOf<AMainItemActor> ItemClass);
+	void OnGridItemClicked(const TSubclassOf<AMainItemActor> ItemClass);
 
 	UFUNCTION()
 	void FilterGridByCategory(const EItemType Category);

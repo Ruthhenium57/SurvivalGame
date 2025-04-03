@@ -9,7 +9,7 @@
 UENUM(BlueprintType)
 enum class EItemType : uint8
 {
-	None			UMETA(DisplayName = "None"),
+	AllTypes		UMETA(DisplayName = "AllTypes"),
 	Weapon			UMETA(DisplayName = "Weapon"),
 	Tool			UMETA(DisplayName = "Tool"),
 	Medicine		UMETA(DisplayName = "Medicine"),
@@ -26,7 +26,7 @@ struct RPG_PROJECT_API FItemData: public FTableRowBase
 
 	FItemData()
 		: MaxQuantity(1)
-		, ItemType(EItemType::None)
+		, ItemType(EItemType::AllTypes)
 		, ItemImage(nullptr)
 	{}
 

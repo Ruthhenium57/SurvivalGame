@@ -24,22 +24,16 @@ public:
 	void OnButtonClicked();
 
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* CategoryNameBlock;
+	class UTextBlock* Name;
 
 	UPROPERTY(meta = (BindWidget))
-	class UTexture2D* CategoryIcon;
-
-	UPROPERTY(meta = (BindWidget))
-	class UButton* CategoryButton;
+	class UButton* Button;
 
 	UPROPERTY()
 	EItemType ItemCategory;
 
 	UFUNCTION()
 	void UpdateWidgetData();
-
-	UFUNCTION()
-	void SetIcon(const FString& IconPath);
 
 	UPROPERTY(BlueprintAssignable)
 	FOnCategorySelectedDelegate OnCategorySelected;

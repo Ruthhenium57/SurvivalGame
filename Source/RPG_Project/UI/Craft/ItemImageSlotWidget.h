@@ -31,7 +31,7 @@ public:
 
 protected:
 	UPROPERTY(meta = (BindWidget))
-	class UTexture2D* ItemImage;
+	class UImage* ItemImage;
 
 	UPROPERTY(meta = (BindWidget))
 	class UButton* Button;
