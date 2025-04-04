@@ -54,7 +54,7 @@ void UCraftingMenuWidget::InitializeCategories()
 		{
 			// add to cache & update created widget
 			CategoriesBox->AddChild(Widget);
-			Widget->ItemCategory(Category);
+			Widget->ItemCategory = Category;
 			Widget->UpdateWidgetData();
 			Widget->OnCategorySelected.AddDynamic(this, &UCraftingMenuWidget::SelectCategory);
 		}

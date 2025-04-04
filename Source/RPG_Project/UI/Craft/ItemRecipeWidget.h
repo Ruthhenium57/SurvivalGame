@@ -13,5 +13,10 @@ UCLASS()
 class RPG_PROJECT_API UItemRecipeWidget : public UUserWidget
 {
 	GENERATED_BODY()
-	
+
+	UPROPERTY(meta = (BindWidget))
+	class UImage* ItemImage;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* NeededItemsText;
 };

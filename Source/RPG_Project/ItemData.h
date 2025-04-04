@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/Image.h"
 #include "ItemData.generated.h"
 
 
@@ -54,6 +55,6 @@ public:
 	FString InteractTextBlockName2;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	TObjectPtr<UTexture2D> ItemImage;
+	TObjectPtr<UImage> ItemImage;
 };
 

@@ -30,9 +30,6 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UUniformGridPanel* CraftsGrid;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
-	TSubclassOf<UCategoryButtonWidget> CategoryButton;
-
 	UPROPERTY()
 	APlayableCharacter* OwningPlayer;
 

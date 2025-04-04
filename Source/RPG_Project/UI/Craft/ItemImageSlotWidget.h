@@ -29,7 +29,6 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnClickedOnItemImage OnClickedDelegate;
 
-protected:
 	UPROPERTY(meta = (BindWidget))
 	class UImage* ItemImage;
 

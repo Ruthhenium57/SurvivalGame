@@ -28,5 +28,8 @@ class RPG_PROJECT_API UCraftDescriptionWidget : public UUserWidget
 	class UButton* CraftButton;
 
 	UFUNCTION()
+	void OnButtonClicked();
+
+	UFUNCTION()
 	void UpdateDescription(const FString& Name, const FString& Description);
 };

@@ -3,3 +3,10 @@
 
 #include "CraftDescriptionWidget.h"
 
+void UCraftDescriptionWidget::OnButtonClicked()
+{
+}
+
+void UCraftDescriptionWidget::UpdateDescription(const FString& Name, const FString& Description)
+{
+}

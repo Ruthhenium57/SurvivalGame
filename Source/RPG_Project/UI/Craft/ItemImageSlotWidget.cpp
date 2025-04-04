@@ -10,7 +10,7 @@ void UItemImageSlotWidget::NativeConstruct()
 	Button->OnClicked.AddDynamic(this, &UItemImageSlotWidget::OnButtonClicked);
 }
 
-void UItemImageSlotWidget::UpdateImageInfo(FItemData ItemData)
+void UItemImageSlotWidget::UpdateImageInfo(const FItemData ItemData)
 {
 	if (ItemData.ItemImage)
 	{

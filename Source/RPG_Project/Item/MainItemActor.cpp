@@ -51,23 +51,6 @@ void AMainItemActor::MulticastHideItem_Implementation()
 void AMainItemActor::BeginPlay()
 {
 	Super::BeginPlay();
-	UDataTable* ItemDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Data/DT_Item.DT_Item"));
-	if (ItemDataTable)
-	{
-		FString ContextString = "";
-		FName RowName = FName(GetClass()->GetName().RightChop(7).LeftChop(2));
-		UE_LOG(LogTemp, Display, TEXT("Item: %s"), *GetClass()->GetName().RightChop(7).LeftChop(2));
-		FItemData* ItemData = ItemDataTable->FindRow<FItemData>(RowName, ContextString);
-		if (ItemData)
-		{
-			InteractTextBlockName = ItemData->InteractTextBlockName;
-			InteractTextBlockName2 = ItemData->InteractTextBlockName2;
-			MaxStack = ItemData->MaxQuantity;
-			ItemName = ItemData->ItemName;
-			Description = ItemData->ItemDescription;
-			Icon = ItemData->ItemImage;
-		}
-	}
 }
 
 // Called every frame
