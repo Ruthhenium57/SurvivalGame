@@ -10,7 +10,6 @@
 #include "InteractionInfoWidget.h"
 #include "InventoryWidget.h"
 #include "Item/Resource/Rope/ItemRopeActor.h"
-#include "GameHUD.h"
 #include "GameFramework/PlayerController.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -58,8 +57,6 @@ void APlayableCharacter::BeginPlay()
 
 void APlayableCharacter::InitializeWidget()
 {
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	
 	if (!MainHUDWidget && MainHUDWidgetClass)
 	{
 		MainHUDWidget = CreateWidget<UMainHUDWidget>(GetWorld(), MainHUDWidgetClass);
@@ -78,9 +75,9 @@ void APlayableCharacter::InitializeWidget()
 	}
 }
 
-void APlayableCharacter::Tick(float DeltaTime)
+void APlayableCharacter::Tick(float DeltaSeconds)
 {
-	Super::Tick(DeltaTime);
+	Super::Tick(DeltaSeconds);
 
 	UpdateStaminaBar();
 	UpdateHealthBar();
