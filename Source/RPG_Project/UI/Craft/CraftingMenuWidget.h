@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "CategoryButtonWidget.h"
 #include "ItemImageSlotWidget.h"
 #include "RPG_Project/PlayableCharacter.h"
 #include "CraftingMenuWidget.generated.h"

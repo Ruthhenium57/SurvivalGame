@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "RPG_Project/ItemData.h"
 #include "ItemRecipeWidget.generated.h"
 
 /**
@@ -14,9 +15,13 @@ class RPG_PROJECT_API UItemRecipeWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
+public:
 	UPROPERTY(meta = (BindWidget))
 	class UImage* ItemImage;
 
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* NeededItemsText;
+
+	UFUNCTION()
+	void UpdateInfo(FItemData ItemData, FText ItemRecipeText);
 };

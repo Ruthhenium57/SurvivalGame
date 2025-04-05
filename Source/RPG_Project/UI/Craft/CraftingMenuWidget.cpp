@@ -2,6 +2,8 @@
 
 
 #include "CraftingMenuWidget.h"
+#include "CategoryButtonWidget.h"
+#include "CraftDescriptionWidget.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/VerticalBox.h"
 #include "RPG_Project/Item/InventoryComponent.h"
@@ -65,6 +67,8 @@ void UCraftingMenuWidget::OnGridItemClicked(const TSubclassOf<AMainItemActor> It
 {
 	if (ItemClass)
 	{
+		UCraftDescriptionWidget* Widget = CreateWidget<UCraftDescriptionWidget>(this, UCraftDescriptionWidget::StaticClass(), FName("Description"));
+		if (!Widget) return;
 		
 	}
 }

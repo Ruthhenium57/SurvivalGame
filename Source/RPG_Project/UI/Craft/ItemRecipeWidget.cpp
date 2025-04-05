@@ -3,3 +3,10 @@
 
 #include "ItemRecipeWidget.h"
 
+#include "Components/TextBlock.h"
+
+void UItemRecipeWidget::UpdateInfo(FItemData ItemData, FText ItemRecipeText)
+{
+	ItemImage = ItemData.ItemImage;
+	NeededItemsText->SetText(ItemRecipeText);
+}
