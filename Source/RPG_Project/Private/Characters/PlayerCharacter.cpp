@@ -1,0 +1,454 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "Characters/PlayerCharacter.h"
+#include "UI/HUD/MainHUDWidget.h"
+#include "UI/HUD/HealthBarWidget.h"
+#include "UI/HUD/StaminaBarWidget.h"
+#include "UI/HUD/HungerBarWidget.h"
+#include "UI/HUD/ThirstBarWidget.h"
+#include "UI/HUD/InteractionInfoWidget.h"
+#include "UI/Inventory/InventoryWidget.h"
+#include "GameFramework/PlayerController.h"
+#include "Components/InputComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "TimerManager.h"
+#include "UI/Craft/CraftingMenuWidget.h"
+
+APlayerCharacter::APlayerCharacter()
+{
+	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+	FirstPersonCamera->SetupAttachment(GetMesh(), TEXT("Head"));
+
+	PlayerStatsComp = CreateDefaultSubobject<UPlayerStatsComp>(TEXT("PlayerStatsComp"));
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
+	InventoryComponent->SetIsReplicated(true);
+	CraftComponent = CreateDefaultSubobject<UCraftComponent>(TEXT("CraftComponent"));
+	CraftComponent->CraftType = ECraftType::Hand;
+	CraftComponent->InventoryComponent = InventoryComponent;
+
+	DefaultWalkSpeed = 600.0f;
+	SprintSpeed = 1200.0f;
+	bIsSprinting = false;
+	StaminaRegenDelay = 1.5f;
+	NeedStaminaToJump = 12.0f;
+
+	BaseTurnRate = 45.0f;
+	BaseLookUpRate = 45.0f;
+
+	InteractionDistance = 400.0f;
+	bIsInventoryHidden = true;
+}
+
+void APlayerCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	GetCharacterMovement()->MaxWalkSpeed = DefaultWalkSpeed;
+
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle_InitWidget, this, &APlayerCharacter::InitializeWidget, 0.1f, false);
+
+	if (PlayerStatsComp)
+	{
+		PlayerStatsComp->OnStaminaEnd.AddDynamic(this, &APlayerCharacter::OnStaminaEnd);
+	}
+}
+
+void APlayerCharacter::InitializeWidget()
+{
+	if (!MainHUDWidget && MainHUDWidgetClass)
+	{
+		MainHUDWidget = CreateWidget<UMainHUDWidget>(GetWorld(), MainHUDWidgetClass);
+		if (MainHUDWidget)
+		{
+			MainHUDWidget->AddToViewport();
+			InventoryComponent->PlayerWidget = MainHUDWidget;
+			MainHUDWidget->InventoryWidget->OwningPlayer = this;
+			MainHUDWidget->CraftingMenuWidget->OwningPlayer = this;
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("HUD or MainHUDWidget is not ready yet, retrying..."));
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_InitWidget, this, &APlayerCharacter::InitializeWidget, 0.1f, false);
+		}
+	}
+}
+
+void APlayerCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	UpdateStaminaBar();
+	UpdateHealthBar();
+	UpdateHungerBar();
+	UpdateThirstBar();
+	UpdateInteractInfo();
+}
+
+void APlayerCharacter::SetupPlayerInputComponent(UInputComponent * MainPlayerInput)
+{
+	Super::SetupPlayerInputComponent(MainPlayerInput);
+
+	
+	MainPlayerInput->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
+	MainPlayerInput->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
+	
+	MainPlayerInput->BindAxis("LookUpDown", this, &APlayerCharacter::Look);
+	MainPlayerInput->BindAxis("Turn", this, &APlayerCharacter::Turn);
+	
+	MainPlayerInput->BindAction("Jump", IE_Pressed, this, &APlayerCharacter::Jump);
+	MainPlayerInput->BindAction("Jump", IE_Released, this, &APlayerCharacter::StopJump);
+
+	MainPlayerInput->BindAction("Sprint", IE_Pressed, this, &APlayerCharacter::Sprint);
+	MainPlayerInput->BindAction("Sprint", IE_Released, this, &APlayerCharacter::StopSprint);
+
+
+	MainPlayerInput->BindAction("Interact", IE_Pressed, this, &APlayerCharacter::Interact);
+	MainPlayerInput->BindAction("PutItemToStorage", IE_Pressed, this, &APlayerCharacter::PutItemToStorage);
+
+	MainPlayerInput->BindAction("ToggleInventory", IE_Pressed, this, &APlayerCharacter::ToggleInventory);
+	MainPlayerInput->BindAction("ToggleCraftMenu", IE_Pressed, this, &APlayerCharacter::ToggleCraftMenu);
+}
+
+void APlayerCharacter::MoveForward(float Value)
+{
+	if (Value != 0.0f)
+	{
+		AddMovementInput(GetActorForwardVector(), Value);
+	}
+}
+
+void APlayerCharacter::MoveRight(float Value)
+{
+	FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Y);
+	AddMovementInput(Direction, Value);
+}
+
+void APlayerCharacter::Look(float Value)
+{
+	AddControllerPitchInput(Value * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+}
+
+void APlayerCharacter::Turn(float Value)
+{
+	AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+}
+
+void APlayerCharacter::Jump()
+{
+	if (PlayerStatsComp->CurrentStamina > NeedStaminaToJump)
+	{
+		PlayerStatsComp->bCanStaminaRegen = false;
+		bPressedJump = true;
+		if (HasAuthority())
+		{
+			PlayerStatsComp->OneTimeStaminaReduction(NeedStaminaToJump);
+			PlayerStatsComp->MulticastOneTimeStaminaReduction(NeedStaminaToJump);
+		}
+		else
+		{
+			PlayerStatsComp->ServerOneTimeStaminaReduction_Implementation(NeedStaminaToJump);
+		}
+	}
+}
+
+void APlayerCharacter::StopJump()
+{
+	bPressedJump = false;
+	PlayerStatsComp->bCanStaminaRegen = true;
+}
+
+void APlayerCharacter::OnStaminaEnd()
+{
+	StopSprint();
+}
+
+void APlayerCharacter::Sprint()
+{
+	if (PlayerStatsComp && PlayerStatsComp->CurrentStamina > 0)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(StaminaRegenTimerHandle);
+		bIsSprinting = true;
+		PlayerStatsComp->StartSprint();
+		if (HasAuthority())
+		{
+			GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+			MulticastSetSprintSpeed(SprintSpeed);
+		}
+		else
+		{
+			ServerSetSprintSpeed(SprintSpeed);
+		}
+	}
+}
+
+void APlayerCharacter::StopSprint()
+{
+	bIsSprinting = false;
+	PlayerStatsComp->StopSprint();
+	GetWorld()->GetTimerManager().SetTimer(StaminaRegenTimerHandle, this, &APlayerCharacter::BeginStaminaRegen, StaminaRegenDelay, false);
+	if (HasAuthority())
+	{
+		GetCharacterMovement()->MaxWalkSpeed = DefaultWalkSpeed;
+		MulticastSetSprintSpeed(DefaultWalkSpeed);
+	}
+	else
+	{
+		ServerSetSprintSpeed(DefaultWalkSpeed);
+	}
+}
+
+void APlayerCharacter::UpdateHealthBar()
+{
+	if (PlayerStatsComp && MainHUDWidget)
+	{
+		const float HealthPercentage = PlayerStatsComp->CurrentHealth / PlayerStatsComp->MaxHealth;
+		MainHUDWidget->HealthBarWidget->SetHealth(HealthPercentage);
+	}
+}
+
+void APlayerCharacter::UpdateStaminaBar()
+{
+	if (PlayerStatsComp && MainHUDWidget)
+	{
+		const float StaminaPercentage = PlayerStatsComp->CurrentStamina / PlayerStatsComp->MaxStamina;
+		MainHUDWidget->StaminaBarWidget->SetStamina(StaminaPercentage);
+	}
+}
+
+void APlayerCharacter::UpdateThirstBar()
+{
+	if (PlayerStatsComp && MainHUDWidget)
+	{
+		const float ThirstPercentage = PlayerStatsComp->CurrentThirst / PlayerStatsComp->MaxThirst;
+		MainHUDWidget->ThirstBarWidget->SetThirst(ThirstPercentage);
+	}
+}
+
+void APlayerCharacter::UpdateHungerBar()
+{
+	if (PlayerStatsComp && MainHUDWidget)
+	{
+		const float HungerPercentage = PlayerStatsComp->CurrentHunger / PlayerStatsComp->MaxHunger;
+		MainHUDWidget->HungerBarWidget->SetHunger(HungerPercentage);
+	}
+}
+
+void APlayerCharacter::UpdateInteractInfo()
+{
+	if (MainHUDWidget)
+	{
+		FHitResult HitResult;
+		PerformLineTrace(HitResult, FirstPersonCamera->GetComponentLocation(), FirstPersonCamera->GetComponentRotation());
+		AActor* HitActor = HitResult.GetActor();
+		if (HitActor && HitActor->GetClass()->ImplementsInterface(UInteractableInterface::StaticClass()))
+		{
+			if (IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor))
+			{
+				MainHUDWidget->InteractionInfoWidget->ShowInteractInfo(Interactable->InteractTextBlockName);
+				if (!Interactable->InteractTextBlockName2.IsEmpty())
+				{
+					MainHUDWidget->InteractionInfoWidget->ShowInteractInfo(Interactable->InteractTextBlockName2);
+					return;
+				}
+				return;
+			}
+		}
+		MainHUDWidget->InteractionInfoWidget->HideInteractInfo();
+	}
+}
+
+void APlayerCharacter::BeginStaminaRegen()
+{
+	PlayerStatsComp->bCanStaminaRegen = true;
+}
+
+void APlayerCharacter::Interact()
+{
+	if (!IsLocallyControlled())  // If server
+	{
+		return; 
+	}
+
+	FHitResult HitResult;
+	PerformLineTrace(HitResult, FirstPersonCamera->GetComponentLocation(), FirstPersonCamera->GetComponentRotation());
+
+	if (HitResult.GetActor() && HitResult.GetActor()->Implements<UInteractableInterface>()) // If has interface
+	{
+		ServerInteract(HitResult.GetActor(), FirstPersonCamera->GetComponentLocation(), FirstPersonCamera->GetComponentRotation());
+	}
+}
+
+void APlayerCharacter::ServerInteract_Implementation(AActor* HitActor, FVector ClientLocation, FRotator ClientRotation)
+{
+	if (!HitActor || !HitActor->Implements<UInteractableInterface>())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Server: Target is invalid or does not implement interface"));
+		return;
+	}
+
+
+	FHitResult ServerHitResult;
+	PerformLineTrace(ServerHitResult, ClientLocation, ClientRotation);
+	if (ServerHitResult.GetActor() != HitActor)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Server: Expected Hit Actor - %s, but got - %s"),
+			*GetNameSafe(HitActor), *GetNameSafe(ServerHitResult.GetActor()));
+		UE_LOG(LogTemp, Warning, TEXT("Server: Client tried to interact with an invalid target"));
+		return;  // Client send false hit result
+	}
+
+	if (IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor))
+	{
+		Interactable->Interact(this); // Call interact
+	}
+}
+
+bool APlayerCharacter::ServerInteract_Validate(AActor* HitActor, FVector ClientLocation, FRotator ClientRotation)
+{
+	return HitActor != nullptr;
+}
+
+void APlayerCharacter::PutItemToStorage()
+{
+	if (!IsLocallyControlled()) // If server
+	{
+		return; 
+	}
+
+	FHitResult HitResult;
+	PerformLineTrace(HitResult, FirstPersonCamera->GetComponentLocation(), FirstPersonCamera->GetComponentRotation());
+
+	if (HitResult.GetActor() && HitResult.GetActor()->Implements<UInteractableInterface>()) // If has interface
+	{
+		ServerPutItemToStorage(HitResult.GetActor(), FirstPersonCamera->GetComponentLocation(), FirstPersonCamera->GetComponentRotation());
+	}
+}
+
+void APlayerCharacter::OnItemAdded(bool bSuccess, AMainItemActor* Item)
+{
+	/*UE_LOG(LogTemp, Warning, TEXT("OnItemIsAddedIsCalled"));
+	if (bSuccess && Item)
+	{
+		MainHUDWidget->InventoryWidget->AddItemToList(Item);
+	}*/
+}
+
+void APlayerCharacter::OnItemRemoved(bool bSuccess, AMainItemActor* Item)
+{
+	/*if (bSuccess && Item)
+	{
+		MainHUDWidget->InventoryWidget->AddItemToList(Item);
+	}*/
+}
+
+void APlayerCharacter::ToggleInventory()
+{
+	if (MainHUDWidget && MainHUDWidget->InventoryWidget)
+	{
+		if (bIsInventoryHidden && MainHUDWidget->InventoryWidget->GetVisibility() == ESlateVisibility::Collapsed)
+		{
+			MainHUDWidget->InventoryWidget->SetVisibility(ESlateVisibility::Visible);
+			bIsInventoryHidden = false;
+		}
+		else
+		{
+			MainHUDWidget->InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+			bIsInventoryHidden = true;
+		}
+	}
+	else UE_LOG(LogTemp, Display, TEXT("Inventory hasn't been spawned"));
+}
+
+void APlayerCharacter::ToggleCraftMenu()
+{
+	if (MainHUDWidget && MainHUDWidget->CraftingMenuWidget)
+	{
+		if (bIsCraftMenuHidden && MainHUDWidget->CraftingMenuWidget->GetVisibility() == ESlateVisibility::Collapsed)
+		{
+			MainHUDWidget->CraftingMenuWidget->SetVisibility(ESlateVisibility::Visible);
+			bIsCraftMenuHidden = false;
+		}
+		else
+		{
+			MainHUDWidget->CraftingMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+			bIsCraftMenuHidden = true;
+		}
+	}
+	else UE_LOG(LogTemp, Display, TEXT("Craft menu hasn't been spawned"));
+}
+
+void APlayerCharacter::ServerPutItemToStorage_Implementation(AActor* HitActor, FVector ClientLocation, FRotator ClientRotation)
+{
+	if (!HitActor || !HitActor->Implements<UInteractableInterface>())
+	{
+		return;
+	}
+
+	FHitResult ServerHitResult;
+	PerformLineTrace(ServerHitResult, ClientLocation, ClientRotation);
+	if (ServerHitResult.GetActor() != HitActor)
+	{
+		return;  // Client send false hit result
+	}
+
+	if (HitActor && HitActor->Implements<UInteractableInterface>())
+	{
+		if (IInteractableInterface* Interactable = Cast<IInteractableInterface>(HitActor))
+		{
+			Interactable->PutItemToStorage(this); // Call func
+		}
+	}
+}
+
+bool APlayerCharacter::ServerPutItemToStorage_Validate(AActor* HitActor, FVector ClientLocation, FRotator ClientRotation)
+{
+	return HitActor != nullptr;
+}
+
+void APlayerCharacter::PerformLineTrace(FHitResult& HitResult, FVector Location, FRotator Rotation)
+{
+	FVector Start = Location;
+	FVector ForwardVector = Rotation.Vector();
+	FVector End = ((ForwardVector * InteractionDistance) + Start);
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(this);
+
+	//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2, 0, 1);
+	GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, CollisionParams);
+}
+
+void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	//DOREPLIFETIME(AMyCharacter, Health);
+}
+
+void APlayerCharacter::ServerSetSprintSpeed_Implementation(float NewSpeed)
+{
+	GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
+	MulticastSetSprintSpeed(NewSpeed);
+}
+
+bool APlayerCharacter::ServerSetSprintSpeed_Validate(float NewSpeed)
+{
+	return true;
+}
+
+void APlayerCharacter::MulticastSetSprintSpeed_Implementation(float NewSpeed)
+{
+	if (!HasAuthority())
+	{
+		GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
+	}
+}
+
+void APlayerCharacter::CraftItem(TSubclassOf<AMainItemActor> Item)
+{
+	
+}
+
+
+
+
