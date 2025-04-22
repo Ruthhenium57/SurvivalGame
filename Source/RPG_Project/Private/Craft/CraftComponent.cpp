@@ -1,104 +1,39 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "CraftComponent.h"
-#include "Net/UnrealNetwork.h"
+#include "Craft/CraftComponent.h"
 #include "Engine/Engine.h"
-#include "MainItemActor.h"
+#include "Inventory/MainItemActor.h"
+#include "Inventory/InventoryComponent.h"
+#include "Craft/CraftData.h"
 #include "Engine/DataTable.h"
 
 
-// Sets default values for this component's properties
 UCraftComponent::UCraftComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
+	SetIsReplicatedByDefault(true);
 	CraftType = ECraftType::Hand;
 }
 
-
-// Called when the game starts
 void UCraftComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	CacheCraftDT();
 }
 
-
-// Called every frame
-void UCraftComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UCraftComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 }
 
-bool UCraftComponent::CraftItem(TSubclassOf<AMainItemActor> ItemClass)
-{
-	if (GetOwnerRole() == ROLE_Authority)
-	{
-		bool bSuccess = CraftItemInternal(ItemClass);
-		return bSuccess;
-	}
-	else
-	{
-		ServerCraftItem(ItemClass); 
-		return false;
-	}
-}
 
-FCraftData UCraftComponent::GetCraftItemData(TSubclassOf<AMainItemActor> ItemClass)
+FCraftData UCraftComponent::GetCraftItemData(const TSubclassOf<AMainItemActor>& ItemClass)
 {
 	if (!ItemClass) return FCraftData();
-	if (const FCraftData* CraftData = CraftDataCache.Find(ItemClass)) return *CraftData;
+	if (FCraftData* CraftData = CraftDataCache.Find(ItemClass)) return *CraftData;
 	UE_LOG(LogTemp, Warning, TEXT("CraftComponent::GetCraftItemData: No craft item data found for class %s"), *ItemClass->GetName());
 	return FCraftData();
-}
-
-bool UCraftComponent::CraftItemInternal(TSubclassOf<AMainItemActor> ItemClass)
-{
-	if (ItemClass) 
-	{
-		FCraftData Data = GetCraftItemData(ItemClass);
-		if (InventoryComponent && Data.ItemToCraft)
-		{
-			if (InventoryComponent->HowMuchFreeSpaceInSlot(Data.ItemToCraft) >= Data.Quantity) // If you have free space to new item
-			{
-				TArray<TSubclassOf<AMainItemActor>> ChangedKeys;
-				for (const auto& Material : Data.Materials) // loop for materials
-				{
-					FItemInventorySlot Slot = InventoryComponent->FindSlotByClass(Material.ItemClass);  // find material slot 
-					if (Slot.Items.Num() < Material.Quantity) // if you have enough materials to craft
-					{ 
-						UE_LOG(LogTemp, Error, TEXT("UCraftComponent: Player has no enough comp of type: %s"), *Material.ItemClass->GetClass()->GetName()); 
-						return false; 
-					} 
-				}
-				for (const auto& Material : Data.Materials) // loop for materials type
-				{
-					for (int32 i = 0; i < Material.Quantity; i++) // loop for material count one type
-					{
-						InventoryComponent->RemoveItem(nullptr, Data.Materials[i].ItemClass, true); // remove each item
-					}
-					ChangedKeys.AddUnique(Material.ItemClass);	// add material to changed list
-				}
-				for (int32 i = 0; i < Data.Quantity; i++) // loop for materials type
-				{
-					AMainItemActor* ItemToCraft = GetWorld()->SpawnActor<AMainItemActor>(Data.ItemToCraft);  // spawn new item
-					InventoryComponent->AddItem(ItemToCraft);	// add new item to inventory
-					ItemToCraft->MulticastHideItem();	 // hide new item
-					ChangedKeys.AddUnique(ItemToCraft->GetClass()); // add item to changed list
-				}
-				InventoryComponent->MulticastUpdateSpecificSlots(ChangedKeys);
-				UE_LOG(LogTemp, Display, TEXT("UCraftComponent: Item has been crafted"));
-				return true;
-			}
-			else UE_LOG(LogTemp, Error, TEXT("UCraftComponent: Player has no free space"));
-		}
-		else UE_LOG(LogTemp, Error, TEXT("UCraftComponent: Craft item data is empty"));
-	} 
-	return false;
 }
 
 void UCraftComponent::CacheCraftDT()
@@ -108,28 +43,84 @@ void UCraftComponent::CacheCraftDT()
 		if (CraftType == ECraftType::Hand)
 		{
 			CraftDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Data/DT_HandCraft.DT_HandCraft"));
-			if (!CraftDataTable) { UE_LOG(LogTemp, Error, TEXT("UCraftComponent::CachingDT: Failed to load hand craft DT")); return; }
+			if (!CraftDataTable)
+			{
+				UE_LOG(LogTemp, Error, TEXT("UCraftComponent::CachingDT: Failed to load hand craft DT"));
+				return;
+			}
 		}
 		if (CraftType == ECraftType::Workbench)
 		{
 			CraftDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Data/DT_HandCraft.DT_HandCraft"));
-			if (!CraftDataTable) { UE_LOG(LogTemp, Error, TEXT("UCraftComponent::CachingDT: Failed to load workbench craft DT")); return; }
+			if (!CraftDataTable)
+			{
+				UE_LOG(LogTemp, Error, TEXT("UCraftComponent::CachingDT: Failed to load workbench craft DT"));
+				return;
+			}
 		}
 	}
 	// create cache
 	for (const TPair<FName, uint8*>& Row : CraftDataTable->GetRowMap())
 	{
-		const FCraftData* CraftData = reinterpret_cast<const FCraftData*>(Row.Value);
+		FCraftData* CraftData = reinterpret_cast<FCraftData*>(Row.Value);
 		if (CraftData && CraftData->ItemToCraft) CraftDataCache.Add(CraftData->ItemToCraft, *CraftData);
 	}
 }
 
+bool UCraftComponent::bCanCraft(const TSubclassOf<AMainItemActor>& ItemClass)
+{
+	if (!ItemClass)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UCraftComponent: Validate: ItemClass is nullptr"));
+		return false;
+	}
+	
+	FCraftData CraftData = GetCraftItemData(ItemClass);
+	
+	if (!CraftData.ItemToCraft)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UCraftComponent: Validate: ItemCraftData is nullptr"));
+		return false;
+	}
+	
+	if (InventoryComponent->FindSlotByClass(ItemClass)->GetFreeSpace() < CraftData.Quantity)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UCraftComponent: Validate: Player has no enough space"));
+		return false;
+	}
+	
+	for (const auto& CraftMaterial : CraftData.CraftMaterials)
+	{
+		FItemInventorySlot* Slot = InventoryComponent->FindSlotByClass(CraftMaterial.ItemClass);  
+		if (Slot->Quantity < CraftMaterial.Quantity)
+		{ 
+			UE_LOG(LogTemp, Error, TEXT("UCraftComponent: Player has no enough craft materials of type: %s"),
+			       *CraftMaterial.ItemClass->GetName()); 
+			return false; 
+		} 
+	}
+	
+	return true;
+}
+
+void UCraftComponent::CraftItem(const TSubclassOf<AMainItemActor>& ItemClass)
+{
+	ServerCraftItem(ItemClass);
+}
+
 void UCraftComponent::ServerCraftItem_Implementation(TSubclassOf<AMainItemActor> ItemClass)
 {
-	CraftItemInternal(ItemClass);
+	if (!bCanCraft(ItemClass)) return;
+	FCraftData CraftData = GetCraftItemData(ItemClass);
+	for (auto& Material : CraftData.CraftMaterials)
+	{
+		InventoryComponent->RemoveItemByClass(Material.ItemClass, Material.Quantity);
+	}
+	InventoryComponent->AddItemByClass(ItemClass, CraftData.Quantity);
+	UE_LOG(LogTemp, Error, TEXT("UCraftComponent: Item was successfully crafted")); 
 }
 
 bool UCraftComponent::ServerCraftItem_Validate(TSubclassOf<AMainItemActor> ItemClass)
 {
-	return false;
+	return bCanCraft(ItemClass);
 }

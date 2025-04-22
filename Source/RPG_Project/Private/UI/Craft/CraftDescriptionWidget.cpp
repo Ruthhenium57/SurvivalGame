@@ -5,35 +5,46 @@
 #include "Components/Button.h"
 #include "Components/HorizontalBox.h"
 #include "Components/TextBlock.h"
-#include "Inventory/ItemData.h"
-#include "Characters/PlayerCharacter.h"
+#include "Craft/CraftComponent.h"
+#include "Craft/CraftData.h"
+#include "Inventory/InventoryComponent.h"
+#include "UI/Craft/ItemRecipeWidget.h"
+#include "GameFramework/PlayerState.h"
+
+
+void UCraftDescriptionWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+	InventoryComponent = GetOwningPlayerState()->GetComponentByClass<UInventoryComponent>();
+	CraftComponent = GetOwningPlayerState()->GetComponentByClass<UCraftComponent>();
+}
 
 void UCraftDescriptionWidget::SubscribeToInventoryUpdated()
 {
-	PlayableCharacter->InventoryComponent->OnInventoryUpdated.AddDynamic(this, &UCraftDescriptionWidget::UpdateDescription);
+	InventoryComponent->OnInventoryChanged.AddUObject(this, &UCraftDescriptionWidget::UpdateDescription);
 }
 
 void UCraftDescriptionWidget::OnButtonClicked()
 {
 	if (bCanCraftItem)
 	{
-		PlayableCharacter->CraftComponent->CraftItem(ItemData.ItemClass);
+		CraftComponent->CraftItem(ItemData.ItemClass);
 	}
 }
 
 void UCraftDescriptionWidget::UpdateDescription()
 {
-	ItemName->SetText(FText::FromString(ItemData.ItemName));
-	ItemDescription->SetText(FText::FromString(ItemData.ItemDescription));
+	ItemName->SetText(FText::FromName(ItemData.ItemName));
+	ItemDescription->SetText(FText::FromName(ItemData.ItemDescription));
 	ItemImage = ItemData.ItemImage;
-	const FCraftData CraftData = PlayableCharacter->CraftComponent->GetCraftItemData(ItemData.ItemClass);
+	const FCraftData CraftData = CraftComponent->GetCraftItemData(ItemData.ItemClass);
 	bCanCraftItem = true;
-	for (const auto& Material : CraftData.Materials)
+	for (const auto& Material : CraftData.CraftMaterials)
 	{
-		const auto [Items] = PlayableCharacter->InventoryComponent->FindSlotByClass(ItemData.ItemClass);
+		const auto Items = InventoryComponent->FindSlotByClass(ItemData.ItemClass);
 		int32 AvailableMaterials = 0;
-		if (!Items.IsEmpty()) AvailableMaterials = Items.Num();
-		UItemRecipeWidget* Widget = CreateWidget<UItemRecipeWidget>(this, UItemRecipeWidget::StaticClass(), FName("ItemRecipeWidget"));
+		if (Items) AvailableMaterials = Items->Quantity;
+		UItemRecipeWidget* Widget = CreateWidget<UItemRecipeWidget>(this, ItemRecipeWidgetClass, FName("ItemRecipeWidget"));
 		Widget->UpdateInfo(ItemData, FText::FromString(FString::Printf(TEXT("%d / %d"), AvailableMaterials, Material.Quantity)));
 		RecipeWidgetBox->AddChild(Widget);
 		Widget->SetPadding(FMargin(5.f, 0.f));

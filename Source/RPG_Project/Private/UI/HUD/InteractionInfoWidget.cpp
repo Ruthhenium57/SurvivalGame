@@ -2,29 +2,25 @@
 
 
 #include "UI/HUD/InteractionInfoWidget.h"
-#include "Components/HorizontalBox.h"
 #include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
+#include "UI/HUD/InteractInfoItemWidget.h"
 
-void UInteractionInfoWidget::ShowInteractInfo(FString NameTextBlock)
+void UInteractionInfoWidget::UpdateInteractContainer(const TArray<EInteractType>& Interacts,
+                                                     const TMap<EInteractType, FKey>& Bindings, FName ObjectName)
 {
-	for (UWidget* ChildWidget : InteractionInfoBox->GetAllChildren())
+	InteractionInfoBox->ClearChildren();
+	if (Interacts.IsEmpty() || !InteractInfoItemWidgetClass) return;
+	ItemName->SetText(FText::FromName(ObjectName));
+	for (EInteractType InteractType : Interacts)
 	{
-		UTextBlock* ChildTextBlock = Cast<UTextBlock>(ChildWidget);
-		if (ChildTextBlock && ChildTextBlock->GetName() == NameTextBlock)
+		UInteractInfoItemWidget* InfoItemWidget = CreateWidget<UInteractInfoItemWidget>(
+			this, InteractInfoItemWidgetClass, TEXT("InteractType"));
+		if (InfoItemWidget)
 		{
-			ChildTextBlock->SetVisibility(ESlateVisibility::Visible);
-		}
-	}
-}
-
-void UInteractionInfoWidget::HideInteractInfo()
-{
-	for (UWidget* ChildWidget : InteractionInfoBox->GetAllChildren())
-	{
-		UTextBlock* ChildTextBlock = Cast<UTextBlock>(ChildWidget);
-		if (ChildTextBlock)
-		{
-			ChildTextBlock->SetVisibility(ESlateVisibility::Collapsed);
+			const FKey* FoundKey = Bindings.Find(InteractType);
+			InfoItemWidget->UpdateInteractInfo(InteractType, FoundKey ? *FoundKey : FKey());
+			InteractionInfoBox->AddChild(InfoItemWidget);
 		}
 	}
 }

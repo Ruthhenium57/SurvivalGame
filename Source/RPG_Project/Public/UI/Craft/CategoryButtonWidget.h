@@ -4,8 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Inventory/ItemData.h"
 #include "CategoryButtonWidget.generated.h"
+
+class UButton;
+class UTextBlock;
+enum class EItemType : uint8;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCategorySelectedDelegate, const EItemType, ItemType);
 
@@ -18,23 +21,24 @@ class RPG_PROJECT_API UCategoryButtonWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	virtual void NativeConstruct() override;
-
 	UFUNCTION()
-	void OnButtonClicked();
+    void UpdateWidgetData();
 
-	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* Name;
-
-	UPROPERTY(meta = (BindWidget))
-	class UButton* Button;
+    UPROPERTY(BlueprintAssignable)
+    FOnCategorySelectedDelegate OnCategorySelected;
 
 	UPROPERTY()
 	EItemType ItemCategory;
 
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> Name;
+	
+protected:
 	UFUNCTION()
-	void UpdateWidgetData();
+	void OnButtonClicked();
 
-	UPROPERTY(BlueprintAssignable)
-	FOnCategorySelectedDelegate OnCategorySelected;
+	virtual void NativeConstruct() override;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> Button;
 };

@@ -3,10 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CraftData.h"
 #include "Components/ActorComponent.h"
-#include "Inventory/InventoryComponent.h"
-#include "Craft/CraftData.h"
 #include "CraftComponent.generated.h"
+
+class UInventoryComponent;
 
 UENUM(BlueprintType)
 enum class ECraftType : uint8
@@ -21,43 +22,38 @@ class RPG_PROJECT_API UCraftComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
-	// Sets default values for this component's properties
 	UCraftComponent();
 
 protected:
-	// Called when the game starts
 	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+	
+public:
+	UFUNCTION(BlueprintCallable, Category = "Craft")
+	FCraftData GetCraftItemData(const TSubclassOf<AMainItemActor>& ItemClass);
+	
+	UPROPERTY()
+	TObjectPtr<UInventoryComponent> InventoryComponent;
 
 	UFUNCTION(BlueprintCallable, Category = "Craft")
-	bool CraftItem(TSubclassOf<AMainItemActor> ItemClass);
+	bool bCanCraft(const TSubclassOf<AMainItemActor>& ItemClass);
 
-	UFUNCTION()
-	FCraftData GetCraftItemData(TSubclassOf<AMainItemActor> ItemClass);
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Craft")
-	ECraftType CraftType;
-
-	UPROPERTY()
-	UInventoryComponent* InventoryComponent;
-
+	UFUNCTION(BlueprintCallable, Category = "Craft")
+	void CraftItem(const TSubclassOf<AMainItemActor>& ItemClass);
+	
 	UPROPERTY()
 	TMap<TSubclassOf<AMainItemActor>, FCraftData> CraftDataCache;
-
+	
 private:
-	UFUNCTION()
-	bool CraftItemInternal(TSubclassOf<AMainItemActor> ItemClass);
-
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Craft", meta = (AllowPrivateAccess))
+	ECraftType CraftType;
+	
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerCraftItem(TSubclassOf<AMainItemActor> ItemClass);
-
+	
 	UFUNCTION()
 	void CacheCraftDT();
 	
 	UPROPERTY()
-	UDataTable* CraftDataTable;
+	TObjectPtr<UDataTable> CraftDataTable;
 };

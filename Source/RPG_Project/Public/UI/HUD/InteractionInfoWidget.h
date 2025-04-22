@@ -4,8 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Interfaces/InteractableInterface.h"
 #include "InteractionInfoWidget.generated.h"
 
+class UInputAction;
+class UInteractInfoItemWidget;
+class UTextBlock;
+class UVerticalBox;
 /**
  * 
  */
@@ -13,30 +18,18 @@ UCLASS()
 class RPG_PROJECT_API UInteractionInfoWidget : public UUserWidget
 {
 	GENERATED_BODY()
-	
-public:
-	UFUNCTION(BlueprintCallable, Category = "UI")
-	void ShowInteractInfo(FString NameTextBlock);
 
-	UFUNCTION(BlueprintCallable, Category = "UI")
-	void HideInteractInfo();
+public:
+	UFUNCTION(BlueprintCallable)
+	void UpdateInteractContainer(const TArray<EInteractType>& Interacts, const TMap<EInteractType, FKey>& Bindings, FName ObjectName);
 
 protected:
 	UPROPERTY(meta = (BindWidget))
-	class UHorizontalBox* InteractionInfoBox;
+	TObjectPtr<UVerticalBox> InteractionInfoBox;
 
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* Take;
-
-	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* Put;
-
-	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* Open;
+	TObjectPtr<UTextBlock> ItemName;
 	
-	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* Close;
-
-	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* Interact;
+	UPROPERTY(EditDefaultsOnly, Category = "Widget", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UInteractInfoItemWidget> InteractInfoItemWidgetClass;
 };

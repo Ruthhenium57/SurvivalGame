@@ -3,10 +3,12 @@
 
 #include "UI/Craft/ItemRecipeWidget.h"
 
+#include "Components/Image.h"
+#include "Inventory/ItemData.h"
 #include "Components/TextBlock.h"
 
 void UItemRecipeWidget::UpdateInfo(FItemData ItemData, FText ItemRecipeText)
 {
-	ItemImage = ItemData.ItemImage;
+	ItemImage->SetBrushFromTexture(ItemData.ItemImage);
 	NeededItemsText->SetText(ItemRecipeText);
 }

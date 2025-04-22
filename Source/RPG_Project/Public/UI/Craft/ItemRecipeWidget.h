@@ -4,8 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Inventory/ItemData.h"
 #include "ItemRecipeWidget.generated.h"
+
+struct FItemData;
+class UImage;
+class UTextBlock;
 
 /**
  * 
@@ -17,10 +20,10 @@ class RPG_PROJECT_API UItemRecipeWidget : public UUserWidget
 
 public:
 	UPROPERTY(meta = (BindWidget))
-	class UImage* ItemImage;
+	TObjectPtr<UImage> ItemImage;
 
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* NeededItemsText;
+	TObjectPtr<UTextBlock> NeededItemsText;
 
 	UFUNCTION()
 	void UpdateInfo(FItemData ItemData, FText ItemRecipeText);

@@ -13,14 +13,4 @@ UCLASS()
 class RPG_PROJECT_API AGameHUD : public AHUD
 {
 	GENERATED_BODY()
-
-protected:
-	virtual void BeginPlay() override;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
-	TSubclassOf<class UUserWidget> MainHUDWidgetClass;
-
-public:
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "UI")
-	class UUserWidget* MainHUDWidget;
 };

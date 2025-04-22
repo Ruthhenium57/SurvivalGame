@@ -3,12 +3,18 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Inventory/InventoryComponent.h"
 #include "Blueprint/UserWidget.h"
-#include "ItemRecipeWidget.h"
-#include "Characters/PlayerCharacter.h"
+#include "Inventory/ItemData.h"
 #include "CraftDescriptionWidget.generated.h"
 
+struct FItemInventorySlot;
+class UInventoryComponent;
+class UCraftComponent;
+class UHorizontalBox;
+class UImage;
+class UButton;
+class UItemRecipeWidget;
+class UTextBlock;
 /**
  * 
  */
@@ -17,39 +23,48 @@ class RPG_PROJECT_API UCraftDescriptionWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
-	UPROPERTY(meta = (BingWidget))
-	class UTextBlock* ItemName;
-
-	UPROPERTY(meta = (BingWidget))
-	class UTextBlock* ItemDescription;
-
-	UPROPERTY(meta = (BingWidget))
-	class UItemRecipeWidget* ItemRecipeWidget;
-
-	UPROPERTY(meta = (BingWidget))
-	class UButton* CraftButton;
-
-	UPROPERTY(meta = (BingWidget))
-	class UImage* ItemImage;
-
-	UPROPERTY(meta = (BingWidget))
-	class UHorizontalBox* RecipeWidgetBox;
+public:
+	UFUNCTION()
+	void UpdateDescription();
 
 	UPROPERTY()
 	FItemData ItemData;
+	
+protected:
+	virtual void NativeConstruct() override;
 
-	UPROPERTY()
-	APlayerCharacter* PlayableCharacter;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Widget, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UItemRecipeWidget> ItemRecipeWidgetClass;
+	
+	UPROPERTY(meta = (BingWidget))
+	TObjectPtr<UTextBlock> ItemName;
 
-	UPROPERTY()
+	UPROPERTY(meta = (BingWidget))
+	TObjectPtr<UTextBlock> ItemDescription;
+
+	UPROPERTY(meta = (BingWidget))
+	TObjectPtr<UItemRecipeWidget> ItemRecipeWidget;
+
+	UPROPERTY(meta = (BingWidget))
+	TObjectPtr<UButton> CraftButton;
+
+	UPROPERTY(meta = (BingWidget))
+	TObjectPtr<UTexture2D> ItemImage;
+
+	UPROPERTY(meta = (BingWidget))
+	TObjectPtr<UHorizontalBox> RecipeWidgetBox;
+	
 	bool bCanCraftItem;
+	
+	UPROPERTY()
+	TObjectPtr<UInventoryComponent> InventoryComponent;
+	
+	UPROPERTY()
+	TObjectPtr<UCraftComponent> CraftComponent;
 
 	UFUNCTION()
 	void SubscribeToInventoryUpdated();
 
 	UFUNCTION()
 	void OnButtonClicked();
-
-	UFUNCTION()
-	void UpdateDescription();
 };

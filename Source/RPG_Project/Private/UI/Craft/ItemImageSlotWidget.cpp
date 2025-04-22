@@ -3,6 +3,8 @@
 
 #include "UI/Craft/ItemImageSlotWidget.h"
 #include "Components/Button.h"
+#include "Components/Image.h"
+#include "Inventory/ItemData.h"
 
 void UItemImageSlotWidget::NativeConstruct()
 {
@@ -14,7 +16,7 @@ void UItemImageSlotWidget::UpdateImageInfo(const FItemData ItemData)
 {
 	if (ItemData.ItemImage)
 	{
-		ItemImage = ItemData.ItemImage;
+		ItemImage->SetBrushFromTexture(ItemData.ItemImage);
 	}
 }
 

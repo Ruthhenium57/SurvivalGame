@@ -9,11 +9,11 @@ public class RPG_Project : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        PublicIncludePaths.AddRange(new string[] {  });
+        PublicIncludePaths.AddRange(new string[] { "InventorySystemPlugin/Public" });
         PrivateIncludePaths.AddRange(new string[] {  });
 
-        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "UMG", "Slate", "SlateCore", "EnhancedInput" });
-        PrivateDependencyModuleNames.AddRange(new string[] { "Projects", "OnlineSubsystem", "OnlineSubsystemUtils" });
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "UMG", "Slate", "SlateCore", "EnhancedInput", "NetCore" });
+        PrivateDependencyModuleNames.AddRange(new string[] { "Projects", "OnlineSubsystem", "OnlineSubsystemUtils", "InventorySystemPlugin" });
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });

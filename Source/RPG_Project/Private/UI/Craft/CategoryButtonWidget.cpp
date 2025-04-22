@@ -3,11 +3,13 @@
 
 #include "UI/Craft/CategoryButtonWidget.h"
 #include "Components/TextBlock.h"
+#include "Inventory/ItemData.h"
+
 
 void UCategoryButtonWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-    ItemCategory = EItemType::AllTypes;
+    ItemCategory = EItemType::Component;
 }
 
 void UCategoryButtonWidget::OnButtonClicked()
@@ -17,5 +19,5 @@ void UCategoryButtonWidget::OnButtonClicked()
 
 void UCategoryButtonWidget::UpdateWidgetData()
 {
-	Name->SetText(FText::FromString(StaticEnum<EItemType>()->GetNameStringByValue(static_cast<int32>(ItemCategory))));
+	Name->SetText(FText::FromString(StaticEnum<EItemType>()->GetNameStringByValue(static_cast<int64>(ItemCategory))));
 }

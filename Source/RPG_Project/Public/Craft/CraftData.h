@@ -15,8 +15,6 @@ struct RPG_PROJECT_API FMaterialData : public FTableRowBase
 	GENERATED_BODY()
 
 	FMaterialData() = default;
-		
-public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Material")
 	TSubclassOf<class AMainItemActor> ItemClass;
@@ -32,8 +30,6 @@ struct RPG_PROJECT_API FCraftData : public FTableRowBase
 
 	FCraftData() = default;
 
-public:
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	TSubclassOf<class AMainItemActor> ItemToCraft;
 
@@ -41,5 +37,5 @@ public:
 	int32 Quantity = 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	TArray<FMaterialData> Materials;
+	TArray<FMaterialData> CraftMaterials;
 };

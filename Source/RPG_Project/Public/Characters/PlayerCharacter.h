@@ -4,15 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "MainCharacter.h"
-#include "Camera/CameraComponent.h"
-#include "Inventory/InventoryComponent.h"
-#include "Craft/CraftComponent.h"
-#include "PlayerStats/PlayerStatsComp.h"
 #include "PlayerCharacter.generated.h"
 
-class UMainHUDWidget;
-class UPlayerStatsComp;
-class UInventoryComponent;
+class AMainPlayerController;
+class UInteractionInfoWidget;
+class UCameraComponent;
+class USphereComponent;
+class AMainPlayerState;
 
 UCLASS()
 class RPG_PROJECT_API APlayerCharacter : public AMainCharacter
@@ -27,118 +25,86 @@ protected:
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-private:
-	float DefaultWalkSpeed;
-	float SprintSpeed;
-	bool bIsSprinting;
-
-	void PerformLineTrace(FHitResult& HitResult, FVector Location, FRotator Rotation);
-
-public:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HUD", meta = (AllowPrivateAccess = "true"))
-	UMainHUDWidget* MainHUDWidget;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "HUD")
-	TSubclassOf<UMainHUDWidget> MainHUDWidgetClass;
-
 	UFUNCTION()
-	void InitializeWidget();
+	void InitializeAll();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Components)
+	TObjectPtr<AMainPlayerState> MainPS;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UInteractionInfoWidget> InteractionWidgetClass;
+	
+	UPROPERTY()
+	TObjectPtr<UInteractionInfoWidget> InteractionWidget;
+	
+	UPROPERTY()
+	TObjectPtr<USphereComponent> InteractionArea;
+	
+	UPROPERTY()
+	TArray<AActor*> NearbyInteractiveActors;
 
 	UPROPERTY()
-	FTimerHandle TimerHandle_InitWidget;
+	TObjectPtr<AMainPlayerController> PC;
+	
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
+	TObjectPtr<UCameraComponent> FirstPersonCamera;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
-	class UCameraComponent* FirstPersonCamera;
+	TObjectPtr<UMeshComponent> FirstPersonMesh;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	UPlayerStatsComp* PlayerStatsComp;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
+	TObjectPtr<UMeshComponent> ThirdPersonMesh;
+	
+	/** find the best actor nearby to interact with and return it */
+	UFUNCTION(BlueprintCallable, Category = "Interaction")
+	AActor* CheckForInteractableTarget();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	UInventoryComponent* InventoryComponent;
+	/** called when press interact button */
+	UFUNCTION(BlueprintCallable, Category = "Interaction")
+	void TryInteract();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	UCraftComponent* CraftComponent;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Camera)
-	float BaseTurnRate;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Camera)
-	float BaseLookUpRate;
-
-	virtual void SetupPlayerInputComponent(class UInputComponent* MainPlayerInput) override;
-
-	void MoveForward(float value);
-	void MoveRight(float value);
-	void Look(float value);
-	void Turn(float value);
-	void Jump();
-	void StopJump();
-	UFUNCTION()
-	void OnStaminaEnd();
-
-	UFUNCTION(BlueprintCallable, Category = "Movement")
-	void Sprint();
-
-	UFUNCTION(BlueprintCallable, Category = "Movement")
+	void StartSprint();
 	void StopSprint();
 
+protected:
+	UFUNCTION()
+	void TimerUpdateHighlightedActor();
+	
+	/** create some widgets on client when interact */
+	UFUNCTION(BlueprintCallable, Category = "Interaction")
+	void ClientPredictInteract(AActor* HitActor);
+	
+	/** call interact on server */
 	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerSetSprintSpeed(float NewSpeed);
+	void ServerInteraction(AActor* TargetActor);
 
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastSetSprintSpeed(float NewSpeed);
-
+	/** called when something enters the sphere component */
 	UFUNCTION()
-	void UpdateHealthBar();
+	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+	                    const FHitResult& SweepResult);
+
+	/** called when something leaves the sphere component */
 	UFUNCTION()
-	void UpdateStaminaBar();
-	UFUNCTION()
-	void UpdateThirstBar();
-	UFUNCTION()
-	void UpdateHungerBar();
-	UFUNCTION()
-	void UpdateInteractInfo();
+	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Craft")
-	TSubclassOf<AMainItemActor> ItemToCraft;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
-	float NeedStaminaToJump;
-
-	FTimerHandle StaminaRegenTimerHandle;
-	float StaminaRegenDelay;
-	void BeginStaminaRegen();
-
-	UPROPERTY(EditAnywhere, Category = "Interaction")
-	float InteractionDistance;
-
-	UFUNCTION(Category = "Interaction")
-	void Interact();
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerInteract(AActor* HitActor, FVector ClientLocation, FRotator ClientRotation);
-
-	UFUNCTION(Category = "Interaction")
-	void PutItemToStorage();
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerPutItemToStorage(AActor* HitActor, FVector ClientLocation, FRotator ClientRotation);
-
-	UFUNCTION()
-	void OnItemAdded(bool bSuccess, AMainItemActor* Item);
-
-	UFUNCTION()
-	void OnItemRemoved(bool bSuccess, AMainItemActor* Item);
-
-	UFUNCTION()
-	void ToggleInventory();
-
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction", meta = (AllowPrivateAccess = "true"))
+	float InteractDistance;
+	//dot product. 1 is a small interact angle. 0 - large (90)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction", meta = (AllowPrivateAccess = "true"))
+	float InteractDotProduct;
+	//0.1 - 10 tps; 0.5 - 20 tps
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction", meta = (AllowPrivateAccess = "true"))
+	float HighlightedActorUpdateRate;
+	
 	UPROPERTY()
-	bool bIsInventoryHidden;
-
-	UFUNCTION()
-	void ToggleCraftMenu();
-
+	TObjectPtr<AActor> CurrentHighlightedActor;
 	UPROPERTY()
-	bool bIsCraftMenuHidden;
+	TObjectPtr<AActor> LastHighlightedActor;
 
-	UFUNCTION(Category = "Craft")
-	void CraftItem(TSubclassOf<AMainItemActor> Item);
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction", meta = (AllowPrivateAccess = "true"))
+	float SprintSpeed;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction", meta = (AllowPrivateAccess = "true"))
+	float WalkSpeed;
 };

@@ -4,25 +4,24 @@
 #include "UI/Craft/CraftingMenuWidget.h"
 #include "UI/Craft/CategoryButtonWidget.h"
 #include "UI/Craft/CraftDescriptionWidget.h"
+#include "UI/Craft/ItemImageSlotWidget.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/VerticalBox.h"
-#include "Inventory/InventoryComponent.h"
+#include "Inventory/MainItemActor.h"
+#include "InventoryDataSubsystem.h"
+
 
 void UCraftingMenuWidget::NativeConstruct()
 {
-	Categories.AddUnique(EItemType::AllTypes);
-	Categories.AddUnique(EItemType::Component);
-	Categories.AddUnique(EItemType::Tool);
-	Categories.AddUnique(EItemType::Weapon);
-	Categories.AddUnique(EItemType::Object);
-	Categories.AddUnique(EItemType::Food);
-	Categories.AddUnique(EItemType::Medicine);
+	Categories = {
+		EItemType::Component, EItemType::Food, EItemType::Medicine, EItemType::Object, EItemType::Tool,
+		EItemType::Weapon, EItemType::AllTypes
+	};
+	InventorySubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UInventoryDataSubsystem>();
 }
 
 void UCraftingMenuWidget::InitializeAll()
 {
-	// timer to repeat init if owning player is nullptr
-	if (!OwningPlayer) GetWorld()->GetTimerManager().SetTimer(InitializeRestartTimerHandle, this, &UCraftingMenuWidget::InitializeAll, 0.1, false);
 	InitializeAllItems();
 	InitializeCategories();
 	SelectCategory(EItemType::AllTypes);
@@ -31,11 +30,12 @@ void UCraftingMenuWidget::InitializeAll()
 void UCraftingMenuWidget::InitializeAllItems()
 {
 	// cycle through all crafts
-	for (const auto& Pair : OwningPlayer->CraftComponent->CraftDataCache)
+	for (const auto& Pair : CraftComponent->CraftDataCache)
 	{
-		FItemData Data = OwningPlayer->InventoryComponent->GetItemDataFromTable(Pair.Key);
+		FItemData Data = InventorySubsystem->GetItemDataByClass(Pair.Key);
 		// create craft slot widget
-		if (UItemImageSlotWidget* Widget = CreateWidget<UItemImageSlotWidget>(this, UItemImageSlotWidget::StaticClass(), FName("GridItemToCraft")))
+		if (UItemImageSlotWidget* Widget = CreateWidget<UItemImageSlotWidget>(
+			this, ItemImageSlotWidgetClass, FName("GridCraftItem")))
 		{
 			// add to cache & update created widget 
 			CraftsGrid->AddChild(Widget);
@@ -48,11 +48,11 @@ void UCraftingMenuWidget::InitializeAllItems()
 
 void UCraftingMenuWidget::InitializeCategories()
 {
-	if (Categories.IsEmpty()) return;
 	// cycle through all categories
 	for (EItemType Category : Categories)
 	{
-		if (UCategoryButtonWidget* Widget = CreateWidget<UCategoryButtonWidget>(this, UCategoryButtonWidget::StaticClass(), FName("Category")))
+		if (UCategoryButtonWidget* Widget = CreateWidget<UCategoryButtonWidget>(
+			this, CategoryButtonWidgetClass, FName("Category")))
 		{
 			// add to cache & update created widget
 			CategoriesBox->AddChild(Widget);
@@ -63,41 +63,42 @@ void UCraftingMenuWidget::InitializeCategories()
 	}
 }
 
-void UCraftingMenuWidget::OnGridItemClicked(const TSubclassOf<AMainItemActor> ItemClass)
+void UCraftingMenuWidget::OnGridItemClicked(TSubclassOf<AMainItemActor> ItemClass)
 {
 	if (ItemClass)
 	{
-		UCraftDescriptionWidget* Widget = CreateWidget<UCraftDescriptionWidget>(this, UCraftDescriptionWidget::StaticClass(), FName("Description"));
+		UCraftDescriptionWidget* Widget = CreateWidget<UCraftDescriptionWidget>(
+			this, CraftDescriptionWidgetClass, FName("Description"));
 		if (!Widget) return;
-		
+		Widget->ItemData = InventorySubsystem->GetItemDataByClass(ItemClass);
 	}
 }
 
 void UCraftingMenuWidget::FilterGridByCategory(const EItemType Category)
 {
 	// show all item if you clicked on all button
-	if (Category == EItemType::AllTypes) for (const auto& GridItem : GridItemsCache)
-	{
-		GridItem.Value->SetVisibility(ESlateVisibility::Visible);
-	}
-	// show only the category you clicked on
-	else for (const auto& GridItem : GridItemsCache)
-	{
-		if (OwningPlayer->InventoryComponent->GetItemDataFromTable(GridItem.Key).ItemType == Category)
+	if (Category == EItemType::AllTypes)
+		for (const auto& GridItem : GridItemsCache)
 		{
 			GridItem.Value->SetVisibility(ESlateVisibility::Visible);
 		}
-		else
+	// show only the category you clicked on
+	else
+		for (const auto& GridItem : GridItemsCache)
 		{
-			GridItem.Value->SetVisibility(ESlateVisibility::Collapsed);
+			if (InventorySubsystem->GetItemDataByClass(GridItem.Key).ItemType == Category)
+			{
+				GridItem.Value->SetVisibility(ESlateVisibility::Visible);
+			}
+			else
+			{
+				GridItem.Value->SetVisibility(ESlateVisibility::Collapsed);
+			}
 		}
-	}
-
 }
 
 void UCraftingMenuWidget::SelectCategory(const EItemType Category)
 {
-	if (!OwningPlayer) return;
 	if (Category == CurrentCategory) return;
 	FilterGridByCategory(Category);
 	CurrentCategory = Category;

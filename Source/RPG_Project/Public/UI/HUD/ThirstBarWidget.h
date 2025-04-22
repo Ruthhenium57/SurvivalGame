@@ -6,6 +6,8 @@
 #include "Blueprint/UserWidget.h"
 #include "ThirstBarWidget.generated.h"
 
+class UPlayerStatsComponent;
+class UProgressBar;
 /**
  * 
  */
@@ -13,12 +15,21 @@ UCLASS()
 class RPG_PROJECT_API UThirstBarWidget : public UUserWidget
 {
 	GENERATED_BODY()
-	
-public:
-    UFUNCTION(BlueprintCallable, Category = "UI")
-    void SetThirst(float ThirstPercentage);
 
 protected:
-    UPROPERTY(meta = (BindWidget))
-    class UProgressBar* ThirstBar;
+	virtual void NativeConstruct() override;
+	
+public:
+	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
+	void OnSetThirst(float ThirstPercentage);
+	
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void SetThirst(float ThirstPercentage);
+	
+	UPROPERTY()
+	TObjectPtr<UPlayerStatsComponent> PlayerStatsComponent;
+
+protected:
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UProgressBar> ThirstBar;
 };
