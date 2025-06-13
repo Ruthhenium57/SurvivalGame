@@ -2,6 +2,8 @@
 
 #include "CraftSystemPlugin.h"
 
+DEFINE_LOG_CATEGORY(LogCraft);
+
 #define LOCTEXT_NAMESPACE "FCraftSystemPluginModule"
 
 void FCraftSystemPluginModule::StartupModule()

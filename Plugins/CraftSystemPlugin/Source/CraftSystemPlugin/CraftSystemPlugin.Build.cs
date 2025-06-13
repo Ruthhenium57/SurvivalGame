@@ -10,7 +10,7 @@ public class CraftSystemPlugin : ModuleRules
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
-				// ... add public include paths required here ...
+				//"InventorySystemPlugin/Public"
 			}
 			);
 				
@@ -26,18 +26,22 @@ public class CraftSystemPlugin : ModuleRules
 			new string[]
 			{
 				"Core",
-				// ... add other public dependencies that you statically link with here ...
+				"Projects",
+				"CoreUObject", 
+				"Engine", 
+				"InputCore", 
+				"UMG", 
+				"Slate",
+				"SlateCore",
+				"NetCore",
+				"InventorySystemPlugin"
 			}
-			);
+		);
 			
 		
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"CoreUObject",
-				"Engine",
-				"Slate",
-				"SlateCore",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
