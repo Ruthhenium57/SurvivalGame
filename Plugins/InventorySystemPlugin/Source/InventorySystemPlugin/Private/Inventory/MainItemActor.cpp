@@ -2,18 +2,19 @@
 
 
 #include "Inventory/MainItemActor.h"
-
 #include "InventoryDataSubsystem.h"
-#include "Components/SceneComponent.h"
 #include "Inventory/InventoryComponent.h"
 
 // Sets default values
 AMainItemActor::AMainItemActor()
 {
 	SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
+	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
 	RootComponent = SkeletalMesh;
+	RootComponent = StaticMesh;
 	bReplicates = true;
 	PrimaryActorTick.bCanEverTick = true;
+	ItemID = 0;
 }
 
 void AMainItemActor::BeginPlay()
@@ -42,7 +43,7 @@ TArray<EInteractType> AMainItemActor::GetInteractTypes()
 FName AMainItemActor::GetObjectName()
 {
 	UInventoryDataSubsystem* InventorySubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UInventoryDataSubsystem>();
-	return InventorySubsystem->GetItemDataByClass(GetClass()).ItemName;
+	return InventorySubsystem->GetItemDataByID(ItemID).ItemName;
 }
 
 void AMainItemActor::MulticastHideItem_Implementation()

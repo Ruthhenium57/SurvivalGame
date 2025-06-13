@@ -4,21 +4,23 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
+#include "Inventory/MainItemActor.h"
 #include "ItemData.generated.h"
 
-
-class AMainItemActor;
 
 UENUM(BlueprintType)
 enum class EItemType : uint8
 {
+	Invalid = 0		UMETA(Hidden),
+
 	AllTypes		UMETA(DisplayName = "AllTypes"),
 	Weapon			UMETA(DisplayName = "Weapon"),
 	Tool			UMETA(DisplayName = "Tool"),
 	Medicine		UMETA(DisplayName = "Medicine"),
 	Food			UMETA(DisplayName = "Food"),
 	Component		UMETA(DisplayName = "Component"),
-	Object			UMETA(DisplayName = "Object")
+	Object			UMETA(DisplayName = "Object"),
+	Max				UMETA(Hidden)
 };
 
 
@@ -28,15 +30,18 @@ struct INVENTORYSYSTEMPLUGIN_API FItemData: public FTableRowBase
 	GENERATED_BODY()
 
 	FItemData()
-		: MaxQuantity(1)
+		: ItemID(0)
+		, MaxQuantity(1)
 		, ItemType(EItemType::AllTypes)
 		, ItemImage(nullptr)
-		, SkeletalMesh(nullptr)
 	{}
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+	int32 ItemID;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	FName ItemName;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	FName ItemDescription;
 
@@ -44,15 +49,15 @@ struct INVENTORYSYSTEMPLUGIN_API FItemData: public FTableRowBase
 	int32 MaxQuantity;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	EItemType ItemType;
+	TOptional<EItemType> ItemType;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	TSubclassOf<AMainItemActor> ItemClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	TObjectPtr<UTexture2D> ItemImage;
+	TSoftObjectPtr<UTexture2D> ItemImage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	TObjectPtr<USkeletalMeshComponent> SkeletalMesh;
+	TSoftObjectPtr<USkeletalMesh> SkeletalMesh;
 };
 

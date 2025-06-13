@@ -20,6 +20,9 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastDestroyItem();
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")
+	int32 ItemID;
 	
 protected:
 	virtual void BeginPlay() override;
@@ -31,6 +34,9 @@ protected:
 
 	virtual FName GetObjectName() override;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
 	TObjectPtr<USkeletalMeshComponent> SkeletalMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
+	TObjectPtr<UStaticMeshComponent> StaticMesh;
 	};

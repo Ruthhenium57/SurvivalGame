@@ -2,7 +2,6 @@
 
 
 #include "Inventory/InventoryComponent.h"
-
 #include "InventoryDataSubsystem.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
@@ -20,7 +19,7 @@ void UInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	InventorySubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UInventoryDataSubsystem>();
+	InventoryDataSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UInventoryDataSubsystem>();
 }
 
 void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -30,13 +29,13 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	DOREPLIFETIME_CONDITION(UInventoryComponent, InventorySlots, COND_OwnerOnly);
 }
 
-FItemInventorySlot* UInventoryComponent::FindSlotByClass(const TSubclassOf<AMainItemActor>& ItemClass)
+FItemInventorySlot* UInventoryComponent::FindSlotByID(int32 ItemID)
 {
-	if (!ItemClass) return nullptr;
+	if (!ItemID) return nullptr;
 
 	for (FItemInventorySlot& Slot : InventorySlots.Items)
 	{
-		if (Slot.ItemClass == ItemClass) return &Slot;
+		if (Slot.ItemID == ItemID) return &Slot;
 	}
 
 	return nullptr;
@@ -47,32 +46,32 @@ const TArray<FItemInventorySlot>& UInventoryComponent::GetInventorySlots()
 	return InventorySlots.Items;
 }
 
-void UInventoryComponent::ClientPredictAddItem(TSubclassOf<AMainItemActor> ItemClass, int32 AddAmount)
+void UInventoryComponent::ClientPredictAddItem(int32 ItemID, int32 AddAmount)
 {
-	if (CanAddItems(ItemClass, AddAmount))
+	if (CanAddItems(ItemID, AddAmount))
 	{
 		if (!GetOwner()->HasAuthority())
 		{
-			FItemInventorySlot* Slot = FindSlotByClass(ItemClass);
+			FItemInventorySlot* Slot = FindSlotByID(ItemID);
 			if (Slot)
 			{
 				OnInventorySlotChanged.Broadcast(*Slot, true);
 				return;
 			}
 			FItemInventorySlot NewSlot;
-			NewSlot.ItemClass = ItemClass;
+			NewSlot.ItemID = ItemID;
 			NewSlot.Quantity = AddAmount;
-			NewSlot.MaxQuantity = InventorySubsystem->GetItemDataByClass(ItemClass).MaxQuantity;
+			NewSlot.MaxQuantity = InventoryDataSubsystem->GetItemDataByID(ItemID).MaxQuantity;
 			OnInventorySlotAdded.Broadcast(NewSlot, true);
 		}
 	}
 }
 
-void UInventoryComponent::ClientPredictRemoveItem(TSubclassOf<AMainItemActor> ItemClass, int32 RemoveAmount)
+void UInventoryComponent::ClientPredictRemoveItem(int32 ItemID, int32 RemoveAmount)
 {
 	if (!GetOwner()->HasAuthority())
 	{
-		FItemInventorySlot* Slot = FindSlotByClass(ItemClass);
+		FItemInventorySlot* Slot = FindSlotByID(ItemID);
 		if (Slot->Quantity == RemoveAmount)
 		{
 			OnInventorySlotRemoved.Broadcast(*Slot, true);
@@ -86,11 +85,11 @@ void UInventoryComponent::ClientPredictRemoveItem(TSubclassOf<AMainItemActor> It
 
 void UInventoryComponent::AddItemByInstances(const TArray<AMainItemActor*>& Items)
 {
-	TMap<TSubclassOf<AMainItemActor>, TArray<AMainItemActor*>> SortedItems;
+	TMap<int32, TArray<AMainItemActor*>> SortedItems;
 	for (AMainItemActor* Item : Items)
 	{
 		if (!Item) continue;
-		TArray<AMainItemActor*>* ExistingItems = SortedItems.Find(Item->GetClass());
+		TArray<AMainItemActor*>* ExistingItems = SortedItems.Find(Item->ItemID);
 		if (ExistingItems)
 		{
 			ExistingItems->Add(Item);
@@ -99,7 +98,7 @@ void UInventoryComponent::AddItemByInstances(const TArray<AMainItemActor*>& Item
 		{
 			TArray<AMainItemActor*> NewArray;
 			NewArray.Add(Item);
-			SortedItems.Add(Item->GetClass(), NewArray);
+			SortedItems.Add(Item->ItemID, NewArray);
 		}
 	}
 	for (auto Slot : SortedItems)
@@ -111,20 +110,20 @@ void UInventoryComponent::AddItemByInstances(const TArray<AMainItemActor*>& Item
 	}
 }
 
-void UInventoryComponent::AddItemByClass(TSubclassOf<AMainItemActor> ItemClass, int32 AddAmount)
+void UInventoryComponent::AddItemByID(int32 ItemID, int32 AddAmount)
 {
-	if (CanAddItems(ItemClass, AddAmount))
+	if (CanAddItems(ItemID, AddAmount))
 	{
-		ServerAddItemByClass(ItemClass, AddAmount);
+		ServerAddItemByID(ItemID, AddAmount);
 	}
 }
 
-void UInventoryComponent::RemoveItemByClass(TSubclassOf<AMainItemActor> ItemClass, int32 RemoveAmount,
+void UInventoryComponent::RemoveItemByID(int32 ItemID, int32 RemoveAmount,
                                             bool DestroyAfterRemoving)
 {
-	if (CanRemoveItem(ItemClass, RemoveAmount))
+	if (CanRemoveItem(ItemID, RemoveAmount))
 	{
-		ServerRemoveItemByClass(ItemClass, RemoveAmount);
+		ServerRemoveItemByClass(ItemID, RemoveAmount);
 	}
 }
 
@@ -133,17 +132,17 @@ void UInventoryComponent::OnRep_InventoryChanged()
 	OnInventoryChanged.Broadcast();
 }
 
-bool UInventoryComponent::CanAddItems(TSubclassOf<AMainItemActor> ItemClass, int32 Amount)
+bool UInventoryComponent::CanAddItems(int32 ItemID, int32 Amount)
 {
-	if (!ItemClass || Amount < 1)
+	if (!ItemID || Amount < 1)
 	{
 		LOGF_INV(Warning, "Invalid input params");
 		return false;
 	}
-	FItemInventorySlot* Slot = FindSlotByClass(ItemClass);
+	FItemInventorySlot* Slot = FindSlotByID(ItemID);
 	if (!Slot)
 	{
-		if (Amount > InventorySubsystem->GetItemDataByClass(ItemClass).MaxQuantity)
+		if (Amount > InventoryDataSubsystem->GetItemDataByID(ItemID).MaxQuantity)
 		{
 			LOGF_INV(Warning, "Try to add too much items");
 			return false;
@@ -161,9 +160,9 @@ bool UInventoryComponent::CanAddItems(TSubclassOf<AMainItemActor> ItemClass, int
 void UInventoryComponent::ServerAddItemByInstances_Implementation(const TArray<AMainItemActor*>& Items)
 {
 	const int32 AddAmount = Items.Num();
-	TSubclassOf<AMainItemActor> ItemClass = Items[0]->GetClass();
+	int32 ItemID = Items[0]->ItemID;
 
-	FItemInventorySlot* Slot = FindSlotByClass(ItemClass);
+	FItemInventorySlot* Slot = FindSlotByID(ItemID);
 
 	if (Slot)
 	{
@@ -181,9 +180,9 @@ void UInventoryComponent::ServerAddItemByInstances_Implementation(const TArray<A
 	{
 		//create new slot
 		FItemInventorySlot NewSlot;
-		NewSlot.ItemClass = ItemClass;
+		NewSlot.ItemID = ItemID;
 		NewSlot.Quantity = AddAmount;
-		NewSlot.MaxQuantity = InventorySubsystem->GetItemDataByClass(ItemClass).MaxQuantity;
+		NewSlot.MaxQuantity = InventoryDataSubsystem->GetItemDataByID(ItemID).MaxQuantity;
 		InventorySlots.Items.Add(NewSlot);
 		InventorySlots.MarkItemDirty(NewSlot);
 		InventorySlots.MarkArrayDirty();
@@ -198,15 +197,15 @@ void UInventoryComponent::ServerAddItemByInstances_Implementation(const TArray<A
 
 bool UInventoryComponent::ServerAddItemByInstances_Validate(const TArray<AMainItemActor*>& Items)
 {
-	return !Items.IsEmpty() && CanAddItems(Items[0]->GetClass(), Items.Num());
+	return !Items.IsEmpty() && CanAddItems(Items[0]->ItemID, Items.Num());
 }
 
-void UInventoryComponent::ServerAddItemByClass_Implementation(const TSubclassOf<AMainItemActor> ItemClass,
-                                                              const int32 AddAmount)
+void UInventoryComponent::ServerAddItemByID_Implementation(int32 ItemID,
+                                                           const int32 AddAmount)
 {
-	if (!CanAddItems(ItemClass, AddAmount)) return;
+	if (!CanAddItems(ItemID, AddAmount)) return;
 
-	FItemInventorySlot* Slot = FindSlotByClass(ItemClass);
+	FItemInventorySlot* Slot = FindSlotByID(ItemID);
 
 	if (Slot)
 	{
@@ -220,9 +219,9 @@ void UInventoryComponent::ServerAddItemByClass_Implementation(const TSubclassOf<
 	{
 		//create new slot
 		FItemInventorySlot NewSlot;
-		NewSlot.ItemClass = ItemClass;
+		NewSlot.ItemID = ItemID;
 		NewSlot.Quantity = AddAmount;
-		NewSlot.MaxQuantity = InventorySubsystem->GetItemDataByClass(ItemClass).MaxQuantity;
+		NewSlot.MaxQuantity = InventoryDataSubsystem->GetItemDataByID(ItemID).MaxQuantity;
 		InventorySlots.Items.Add(NewSlot);
 		InventorySlots.MarkItemDirty(NewSlot);
 		InventorySlots.MarkArrayDirty();
@@ -231,20 +230,20 @@ void UInventoryComponent::ServerAddItemByClass_Implementation(const TSubclassOf<
 	}
 }
 
-bool UInventoryComponent::ServerAddItemByClass_Validate(const TSubclassOf<AMainItemActor> ItemClass,
-                                                        const int32 AddAmount)
+bool UInventoryComponent::ServerAddItemByID_Validate(int32 ItemID,
+                                                     const int32 AddAmount)
 {
-	return CanAddItems(ItemClass, AddAmount);
+	return CanAddItems(ItemID, AddAmount);
 }
 
-bool UInventoryComponent::CanRemoveItem(TSubclassOf<AMainItemActor> ItemClass, const int32 RemoveAmount)
+bool UInventoryComponent::CanRemoveItem(int32 ItemID, const int32 RemoveAmount)
 {
-	if (!ItemClass || RemoveAmount < 1)
+	if (!ItemID || RemoveAmount < 1)
 	{
 		LOGF_INV(Warning, "Invalid input params");
 		return false;
 	}
-	FItemInventorySlot* Slot = FindSlotByClass(ItemClass);
+	FItemInventorySlot* Slot = FindSlotByID(ItemID);
 	if (!Slot)
 	{
 		LOGF_INV(Warning, "Can't find slot");
@@ -258,11 +257,11 @@ bool UInventoryComponent::CanRemoveItem(TSubclassOf<AMainItemActor> ItemClass, c
 	return true;
 }
 
-void UInventoryComponent::ServerRemoveItemByClass_Implementation(TSubclassOf<AMainItemActor> ItemClass,
+void UInventoryComponent::ServerRemoveItemByClass_Implementation(int32 ItemID,
                                                                  const int32 RemoveAmount,
                                                                  bool DestroyAfterRemoving)
 {
-	FItemInventorySlot* Slot = FindSlotByClass(ItemClass);
+	FItemInventorySlot* Slot = FindSlotByID(ItemID);
 
 	if (Slot->Quantity == RemoveAmount)
 	{
@@ -281,9 +280,9 @@ void UInventoryComponent::ServerRemoveItemByClass_Implementation(TSubclassOf<AMa
 	}
 }
 
-bool UInventoryComponent::ServerRemoveItemByClass_Validate(TSubclassOf<AMainItemActor> ItemClass,
+bool UInventoryComponent::ServerRemoveItemByClass_Validate(int32 ItemID,
                                                            const int32 RemoveAmount,
                                                            bool DestroyAfterRemoving)
 {
-	return CanRemoveItem(ItemClass, RemoveAmount);
+	return CanRemoveItem(ItemID, RemoveAmount);
 }

@@ -20,15 +20,18 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	FItemData GetItemDataByClass(TSubclassOf<AMainItemActor> ItemClass);
-
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void CacheItemDataTable();
+	FItemData GetItemDataByID(int32 ItemID);
+	
+	DECLARE_MULTICAST_DELEGATE(FInventoryDataIsReadyDelegate)
+	FInventoryDataIsReadyDelegate InventoryDataIsReadyDelegate;
 	
 protected:
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void CacheItemDataTable();
+
 	UPROPERTY()
 	TObjectPtr<UDataTable> ItemDataTable;
 
 	UPROPERTY()
-	TMap<TSubclassOf<AMainItemActor>, FItemData> ItemDataCache;
+	TMap<int32, FItemData> ItemDataCache;
 };

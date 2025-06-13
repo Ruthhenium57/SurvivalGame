@@ -3,7 +3,6 @@
 
 #include "Inventory/Storage/StorageMainActor.h"
 #include "Inventory/InventoryComponent.h"
-#include "Inventory/InventoryStruct.h"
 
 
 AStorageMainActor::AStorageMainActor()
@@ -40,12 +39,12 @@ void AStorageMainActor::ServerTakeItemFromStorage_Implementation(UInventoryCompo
 {
 	if (PlayerInventoryComponent)
 	{
-		if (StorageInventoryComponent->CanRemoveItem(StorageItemClass, 1))
+		if (StorageInventoryComponent->CanRemoveItem(StorageItemID, 1))
 		{
-			if (PlayerInventoryComponent->CanAddItems(StorageItemClass, 1))
+			if (PlayerInventoryComponent->CanAddItems(StorageItemID, 1))
 			{
-				StorageInventoryComponent->RemoveItemByClass(StorageItemClass, 1);
-				PlayerInventoryComponent->AddItemByClass(StorageItemClass, 1);
+				StorageInventoryComponent->RemoveItemByID(StorageItemID, 1);
+				PlayerInventoryComponent->AddItemByID(StorageItemID, 1);
 			}
 		}
 	}
@@ -60,12 +59,12 @@ void AStorageMainActor::ServerPutItemToStorage_Implementation(UInventoryComponen
 {
 	if (PlayerInventoryComponent)
 	{
-		if (PlayerInventoryComponent->CanRemoveItem(StorageItemClass, 1))
+		if (PlayerInventoryComponent->CanRemoveItem(StorageItemID, 1))
 		{
-			if (StorageInventoryComponent->CanAddItems(StorageItemClass, 1))
+			if (StorageInventoryComponent->CanAddItems(StorageItemID, 1))
 			{
-				StorageInventoryComponent->AddItemByClass(StorageItemClass, 1);
-				PlayerInventoryComponent->RemoveItemByClass(StorageItemClass, 1);
+				StorageInventoryComponent->AddItemByID(StorageItemID, 1);
+				PlayerInventoryComponent->RemoveItemByID(StorageItemID, 1);
 			}
 		}
     }

@@ -6,8 +6,6 @@
 #include "Interfaces/InteractableInterface.h"
 #include "StorageMainActor.generated.h"
 
-class UInventoryDataSubsystem;
-class AMainItemActor;
 /**
  * 
  */
@@ -36,15 +34,15 @@ protected:
 	UFUNCTION(Server, Reliable, WithValidation)
 	virtual void ServerTakeItemFromStorage(UInventoryComponent* PlayerInventoryComponent);
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UInventoryComponent* StorageInventoryComponent;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory")
-	TSubclassOf<AMainItemActor> StorageItemClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+	int32 StorageItemID;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
 	FName StorageName;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
 	int32 MaxQuantity;
 };

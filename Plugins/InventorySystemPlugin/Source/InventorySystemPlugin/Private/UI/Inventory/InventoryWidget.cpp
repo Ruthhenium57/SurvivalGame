@@ -2,11 +2,9 @@
 
 
 #include "UI/Inventory/InventoryWidget.h"
-
 #include "InventoryDataSubsystem.h"
 #include "Components/ScrollBox.h"
-#include "UI/Inventory/ItemSlotWidget.h"
-#include "Inventory/MainItemActor.h"
+#include "UI/Inventory/InventoryItemSlotWidget.h"
 #include "InventoryLogMacros.h"
 #include "Inventory/InventoryComponent.h"
 #include "InventorySystemPlugin.h"
@@ -14,7 +12,8 @@
 void UInventoryWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	InitializeAll();
+	FTimerHandle TimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &UInventoryWidget::InitializeAll, 0.1f, false);
 }
 
 void UInventoryWidget::InitializeAll()
@@ -25,11 +24,6 @@ void UInventoryWidget::InitializeAll()
 		InventoryComponent->OnInventorySlotRemoved.AddUObject(this, &UInventoryWidget::RemoveSlot);
 		InventoryComponent->OnInventorySlotChanged.AddUObject(this, &UInventoryWidget::RefreshSlotInfo);
 		UpdateInventory();
-	}
-	else
-	{
-		FTimerHandle TimerHandle;
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &UInventoryWidget::InitializeAll, 0.1f, false);
 	}
 }
 
@@ -50,23 +44,25 @@ void UInventoryWidget::SyncInventoryWithServer()
 {
 	if (!InventoryComponent) return;
 
-	TArray<FName> ServerSlotNames;
+	TArray<int32> ServerSlotNames;
 	for (const FItemInventorySlot& ItemSlot : InventoryComponent->GetInventorySlots())
 	{
-		ServerSlotNames.Add(ItemSlot.ItemClass->GetFName());
-		if (UItemSlotWidget** WidgetPtr = ItemSlotWidgets.Find(ItemSlot.ItemClass->GetFName()))
+		ServerSlotNames.Add(ItemSlot.ItemID);
+		if (UInventoryItemSlotWidget** WidgetPtr = ItemSlotWidgets.Find(ItemSlot.ItemID))
 		{
-			UItemSlotWidget* Widget = *WidgetPtr;
+			UInventoryItemSlotWidget* Widget = *WidgetPtr;
 			if (Widget->IsPredicted() || Widget->GetQuantity() != ItemSlot.Quantity)
 			{
-				UInventoryDataSubsystem* InventorySubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UInventoryDataSubsystem>();
-				Widget->UpdateItemInfo(ItemSlot.ItemClass, ItemSlot.Quantity, InventorySubsystem->GetItemDataByClass(ItemSlot.ItemClass));
+				UInventoryDataSubsystem* InventorySubsystem = GetWorld()->GetGameInstance()->GetSubsystem<
+					UInventoryDataSubsystem>();
+				Widget->UpdateItemInfo(ItemSlot.ItemID, ItemSlot.Quantity,
+				                       InventorySubsystem->GetItemDataByID(ItemSlot.ItemID));
 				Widget->SetIsPredicted(false);
 			}
 		}
 		else
 		{
-			AddNewSlot(ItemSlot, false); 
+			AddNewSlot(ItemSlot, false);
 		}
 	}
 
@@ -80,15 +76,15 @@ void UInventoryWidget::SyncInventoryWithServer()
 	}
 }
 
-void UInventoryWidget::OnItemActionRejected(TSubclassOf<AMainItemActor> ItemClass)
+void UInventoryWidget::OnItemActionRejected(int32 ItemID)
 {
-	if (ItemClass)
+	if (ItemID > 0)
 	{
-		FItemInventorySlot* InventorySlot = InventoryComponent->FindSlotByClass(ItemClass);
-		UItemSlotWidget** WidgetPtr = ItemSlotWidgets.Find(ItemClass->GetFName()); // find widget slot in list
+		FItemInventorySlot* InventorySlot = InventoryComponent->FindSlotByID(ItemID);
+		UInventoryItemSlotWidget** WidgetPtr = ItemSlotWidgets.Find(ItemID); // find widget slot in list
 		if (WidgetPtr)
 		{
-			UItemSlotWidget* Widget = *WidgetPtr;
+			UInventoryItemSlotWidget* Widget = *WidgetPtr;
 			if (Widget->IsPredicted())
 			{
 				if (InventorySlot)
@@ -98,7 +94,7 @@ void UInventoryWidget::OnItemActionRejected(TSubclassOf<AMainItemActor> ItemClas
 				else
 				{
 					FItemInventorySlot WidgetSlot;
-					WidgetSlot.ItemClass = ItemClass;
+					WidgetSlot.ItemID = ItemID;
 					RemoveSlot(WidgetSlot, false);
 				}
 			}
@@ -113,20 +109,22 @@ void UInventoryWidget::OnItemActionRejected(TSubclassOf<AMainItemActor> ItemClas
 
 void UInventoryWidget::RefreshSlotInfo(const FItemInventorySlot& ItemSlot, bool IsPredicted)
 {
-	if (ItemSlot.ItemClass && InventoryComponent)
+	if (ItemSlot.ItemID > 0 && InventoryComponent)
 	{
 		if (IsPredicted)
 		{
-			FDelegateHandle Delegate = InventoryComponent->OnItemActionRejected.AddUObject(this, &UInventoryWidget::OnItemActionRejected);
-			PredictedActionRejectHandles.Add(ItemSlot.ItemClass->GetFName(), Delegate);
+			FDelegateHandle Delegate = InventoryComponent->OnItemActionRejected.AddUObject(
+				this, &UInventoryWidget::OnItemActionRejected);
+			PredictedActionRejectHandles.Add(ItemSlot.ItemID, Delegate);
 		}
-		UItemSlotWidget** ItemWidgetPtr = ItemSlotWidgets.Find(ItemSlot.ItemClass->GetFName()); // find slot widget in map
+		UInventoryItemSlotWidget** ItemWidgetPtr = ItemSlotWidgets.Find(ItemSlot.ItemID); // find slot widget in map
 		if (ItemWidgetPtr)
 		{
-			UItemSlotWidget* ItemWidget = *ItemWidgetPtr;
-			UInventoryDataSubsystem* InventorySubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UInventoryDataSubsystem>();
-			FItemData ItemData =InventorySubsystem->GetItemDataByClass(ItemSlot.ItemClass);
-			ItemWidget->UpdateItemInfo(ItemSlot.ItemClass, ItemSlot.Quantity, ItemData); // update slot info
+			UInventoryItemSlotWidget* ItemWidget = *ItemWidgetPtr;
+			UInventoryDataSubsystem* InventorySubsystem = GetWorld()->GetGameInstance()->GetSubsystem<
+				UInventoryDataSubsystem>();
+			FItemData ItemData = InventorySubsystem->GetItemDataByID(ItemSlot.ItemID);
+			ItemWidget->UpdateItemInfo(ItemSlot.ItemID, ItemSlot.Quantity, ItemData); // update slot info
 			ItemWidget->SetIsPredicted(IsPredicted);
 			LOGF_INV(Display, "Widget has been updated");
 			OnRefreshInfo(ItemSlot);
@@ -137,33 +135,36 @@ void UInventoryWidget::RefreshSlotInfo(const FItemInventorySlot& ItemSlot, bool 
 
 void UInventoryWidget::AddNewSlot(const FItemInventorySlot& ItemSlot, bool IsPredicted)
 {
-	if (ItemSlot.ItemClass)
+	if (ItemSlot.ItemID > 0)
 	{
 		if (IsPredicted)
 		{
-			FDelegateHandle Delegate = InventoryComponent->OnItemActionRejected.AddUObject(this, &UInventoryWidget::OnItemActionRejected);
-			PredictedActionRejectHandles.Add(ItemSlot.ItemClass->GetFName(), Delegate);
+			FDelegateHandle Delegate = InventoryComponent->OnItemActionRejected.AddUObject(
+				this, &UInventoryWidget::OnItemActionRejected);
+			PredictedActionRejectHandles.Add(ItemSlot.ItemID, Delegate);
 		}
-		if (UItemSlotWidget** WidgetPtr = ItemSlotWidgets.Find(ItemSlot.ItemClass->GetFName()))
+		if (UInventoryItemSlotWidget** WidgetPtr = ItemSlotWidgets.Find(ItemSlot.ItemID))
 		{
-			UItemSlotWidget* Widget = *WidgetPtr;
-			UInventoryDataSubsystem* InventorySubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UInventoryDataSubsystem>();
-			FItemData ItemData = InventorySubsystem->GetItemDataByClass(ItemSlot.ItemClass);
-			Widget->UpdateItemInfo(ItemSlot.ItemClass, ItemSlot.Quantity, ItemData);
+			UInventoryItemSlotWidget* Widget = *WidgetPtr;
+			UInventoryDataSubsystem* InventorySubsystem = GetWorld()->GetGameInstance()->GetSubsystem<
+				UInventoryDataSubsystem>();
+			FItemData ItemData = InventorySubsystem->GetItemDataByID(ItemSlot.ItemID);
+			Widget->UpdateItemInfo(ItemSlot.ItemID, ItemSlot.Quantity, ItemData);
 			Widget->SetIsPredicted(false);
 			LOGF_INV(Display, "Slot was synced with server");
 			return;
 		}
-		
-		if (UItemSlotWidget* Widget = CreateWidget<UItemSlotWidget>(this, ItemWidgetClass,
-																	   FName(ItemSlot.ItemClass->GetName())))
-		{	// create widget slot
-			ItemSlotWidgets.Add(ItemSlot.ItemClass->GetFName(), Widget); // add to map
+
+		if (UInventoryItemSlotWidget* Widget = CreateWidget<UInventoryItemSlotWidget>(this, ItemWidgetClass, FName("ItemSlotWidget")))
+		{
+			// create widget slot
+			ItemSlotWidgets.Add(ItemSlot.ItemID, Widget); // add to map
 			InventoryList->AddChild(Widget); // add to widget slot list
 			Widget->SetIsPredicted(IsPredicted);
-			UInventoryDataSubsystem* InventorySubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UInventoryDataSubsystem>();
-			FItemData ItemData = InventorySubsystem->GetItemDataByClass(ItemSlot.ItemClass);
-			Widget->UpdateItemInfo(ItemSlot.ItemClass, ItemSlot.Quantity, ItemData);
+			UInventoryDataSubsystem* InventorySubsystem = GetWorld()->GetGameInstance()->GetSubsystem<
+				UInventoryDataSubsystem>();
+			FItemData ItemData = InventorySubsystem->GetItemDataByID(ItemSlot.ItemID);
+			Widget->UpdateItemInfo(ItemSlot.ItemID, ItemSlot.Quantity, ItemData);
 			// update slot info
 			LOGF_INV(Display, "New slot has been added to widget");
 			OnAddNewSlot(ItemSlot);
@@ -173,19 +174,20 @@ void UInventoryWidget::AddNewSlot(const FItemInventorySlot& ItemSlot, bool IsPre
 
 void UInventoryWidget::RemoveSlot(const FItemInventorySlot& ItemSlot, bool IsPredicted)
 {
-	if (ItemSlot.ItemClass)
+	if (ItemSlot.ItemID > 0)
 	{
 		if (IsPredicted)
 		{
-			FDelegateHandle Delegate = InventoryComponent->OnItemActionRejected.AddUObject(this, &UInventoryWidget::OnItemActionRejected);
-			PredictedActionRejectHandles.Add(ItemSlot.ItemClass->GetFName(), Delegate);
+			FDelegateHandle Delegate = InventoryComponent->OnItemActionRejected.AddUObject(
+				this, &UInventoryWidget::OnItemActionRejected);
+			PredictedActionRejectHandles.Add(ItemSlot.ItemID, Delegate);
 		}
-		UItemSlotWidget** WidgetPtr = ItemSlotWidgets.Find(ItemSlot.ItemClass->GetFName()); // find widget slot in list
+		UInventoryItemSlotWidget** WidgetPtr = ItemSlotWidgets.Find(ItemSlot.ItemID); // find widget slot in list
 		if (WidgetPtr)
 		{
-			UItemSlotWidget* Widget = *WidgetPtr;
+			UInventoryItemSlotWidget* Widget = *WidgetPtr;
 			InventoryList->RemoveChild(Widget); // remove widget
-			ItemSlotWidgets.Remove(ItemSlot.ItemClass->GetFName()); // remove from map
+			ItemSlotWidgets.Remove(ItemSlot.ItemID); // remove from map
 			LOGF_INV(Display, "Slot has been removed from widget");
 			OnRemoveSlot(ItemSlot);
 			return;
