@@ -26,7 +26,6 @@ public class InventorySystemPlugin : ModuleRules
 			new string[]
 			{
 				"Core",
-				"InventorySystemPluginLibrary",
 				"Projects",
 				"CoreUObject", 
 				"Engine", 

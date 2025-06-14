@@ -2,6 +2,8 @@
 
 #include "PlayerStatsSystemPlugin.h"
 
+DEFINE_LOG_CATEGORY(LogPlayerStats);
+
 #define LOCTEXT_NAMESPACE "FPlayerStatsSystemPluginModule"
 
 void FPlayerStatsSystemPluginModule::StartupModule()

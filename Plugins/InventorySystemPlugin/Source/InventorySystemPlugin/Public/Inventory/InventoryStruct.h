@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "MainItemActor.h"
 #include "Net/Serialization/FastArraySerializer.h"
 #include "InventoryStruct.generated.h"
 
@@ -18,12 +17,13 @@ struct FItemInventorySlot : public FFastArraySerializerItem
 	GENERATED_BODY()
 
 	FItemInventorySlot()
-		: Quantity(0)
+		: ItemID(0)
+		, Quantity(0)
 		, MaxQuantity(0)
 	{}
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<AMainItemActor> ItemClass;
+	int32 ItemID;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Quantity;
@@ -35,7 +35,7 @@ struct FItemInventorySlot : public FFastArraySerializerItem
 
 	FORCEINLINE bool operator==(const FItemInventorySlot& Other) const
 	{
-		return ItemClass == Other.ItemClass;
+		return ItemID == Other.ItemID;
 	}
 };
 

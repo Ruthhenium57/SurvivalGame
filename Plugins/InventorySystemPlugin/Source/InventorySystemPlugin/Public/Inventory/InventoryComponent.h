@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Inventory/ItemData.h"
 #include "Inventory/MainItemActor.h"
 #include "Inventory/InventoryStruct.h"
 #include "InventoryComponent.generated.h"
@@ -13,7 +12,7 @@ class UInventoryDataSubsystem;
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnInventorySlotAdded, const FItemInventorySlot&, bool);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnInventorySlotChanged, const FItemInventorySlot&, bool);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnInventorySlotRemoved, const FItemInventorySlot&, bool);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnItemActionRejected, TSubclassOf<AMainItemActor>);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnItemActionRejected, int32);
 DECLARE_MULTICAST_DELEGATE(FOnInventoryChanged);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -35,12 +34,12 @@ public:
 	FOnInventoryChanged OnInventoryChanged;
 	
 	UFUNCTION(BlueprintCallable)
-	bool CanAddItems(TSubclassOf<AMainItemActor> ItemClass, int32 Amount);
+	bool CanAddItems(int32 ItemID, int32 Amount);
 	
 	UFUNCTION(BlueprintCallable)
-	bool CanRemoveItem(TSubclassOf<AMainItemActor> ItemClass, int32 RemoveAmount);
+	bool CanRemoveItem(int32 ItemID, int32 RemoveAmount);
 	
-	FItemInventorySlot* FindSlotByClass(const TSubclassOf<AMainItemActor>& ItemClass);
+	FItemInventorySlot* FindSlotByID(int32 ItemID);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	const TArray<FItemInventorySlot>& GetInventorySlots();
@@ -49,32 +48,32 @@ public:
 	void AddItemByInstances(const TArray<AMainItemActor*>& Items);
 
 	UFUNCTION(BlueprintCallable)
-	void AddItemByClass(TSubclassOf<AMainItemActor> ItemClass, int32 AddAmount);
+	void AddItemByID(int32 ItemID, int32 AddAmount);
 
 	UFUNCTION(BlueprintCallable)
-	void RemoveItemByClass(TSubclassOf<AMainItemActor> ItemClass, int32 RemoveAmount, bool DestroyAfterRemoving = false);
+	void RemoveItemByID(int32 ItemID, int32 RemoveAmount, bool DestroyAfterRemoving = false);
 
 	UFUNCTION(BlueprintCallable)
-	void ClientPredictAddItem(TSubclassOf<AMainItemActor> ItemClass, int32 AddAmount);
+	void ClientPredictAddItem(int32 ItemID, int32 AddAmount);
 
 	UFUNCTION(BlueprintCallable)
-	void ClientPredictRemoveItem(TSubclassOf<AMainItemActor> ItemClass, int32 RemoveAmount);
+	void ClientPredictRemoveItem(int32 ItemID, int32 RemoveAmount);
 	
 private:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerAddItemByInstances(const TArray<AMainItemActor*>& Items);
 
 	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerAddItemByClass(TSubclassOf<AMainItemActor> ItemClass, int32 AddAmount);
+	void ServerAddItemByID(int32 ItemID, int32 AddAmount);
 
 	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerRemoveItemByClass(TSubclassOf<AMainItemActor> ItemClass, int32 RemoveAmount, bool DestroyAfterRemoving = false);
+	void ServerRemoveItemByClass(int32 ItemID, int32 RemoveAmount, bool DestroyAfterRemoving = false);
 
 	UPROPERTY(ReplicatedUsing = OnRep_InventoryChanged)
 	FInventoryList InventorySlots;
 
 	UPROPERTY()
-	TObjectPtr<UInventoryDataSubsystem> InventorySubsystem;
+	TObjectPtr<UInventoryDataSubsystem> InventoryDataSubsystem;
 	
 	UFUNCTION()
 	void OnRep_InventoryChanged();

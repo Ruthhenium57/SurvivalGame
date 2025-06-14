@@ -11,8 +11,8 @@ class AMainItemActor;
 class UInventoryComponent;
 struct FItemInventorySlot;
 class UScrollBox;
-class UItemSlotWidget;
-class AMainPlayerState;
+class UInventoryItemSlotWidget;
+class ASurvivalPlayerState;
 
 /**
  * 
@@ -63,13 +63,13 @@ protected:
 	void SyncInventoryWithServer();
 
 	UFUNCTION()
-	void OnItemActionRejected(TSubclassOf<AMainItemActor> ItemClass);
+	void OnItemActionRejected(int32 ItemID);
 
-	TMap<FName, FDelegateHandle> PredictedActionRejectHandles;
+	TMap<int32, FDelegateHandle> PredictedActionRejectHandles;
 	
 	UPROPERTY()
-	TMap<FName, UItemSlotWidget*> ItemSlotWidgets;
+	TMap<int32, UInventoryItemSlotWidget*> ItemSlotWidgets;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
-	TSubclassOf<UItemSlotWidget> ItemWidgetClass;
+	TSubclassOf<UInventoryItemSlotWidget> ItemWidgetClass;
 };

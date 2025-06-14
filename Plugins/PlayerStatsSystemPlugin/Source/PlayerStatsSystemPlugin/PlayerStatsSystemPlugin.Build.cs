@@ -38,6 +38,9 @@ public class PlayerStatsSystemPlugin : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"UMG", 
+				"Slate",
+				"SlateCore",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
